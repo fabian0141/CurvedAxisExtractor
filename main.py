@@ -1,6 +1,18 @@
 import cv2 as cv
 import numpy as np
 import math
+import subprocess, os, platform
+
+imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0094_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0114_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0177_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0403_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0476_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0661_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0673_02_sl.png"
+
+
 
 def testHoughLine():
     src = cv.imread(cv.samples.findFile("../selected/ZB_0087_02_sl.png"), cv.IMREAD_GRAYSCALE)
@@ -110,17 +122,133 @@ def testHoughCircle():
             return 0
 
 def testContours():
-    im = cv.imread("../selected/ZB_0087_02_sl.png")
-    imgray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+    img = cv.imread(imgFile)
+    imgray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     ret, thresh = cv.threshold(imgray, 200, 255, 0)
-    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
-    cv.drawContours(im, contours, -1, (0,255,0), 1)
-    cv.imshow('dst', im)
-    while(1):
-        if cv.waitKey() == 27:
-            cv.imwrite('test.png', im)
-            return 0
+    cv.drawContours(img, contours, -1, (0,255,0), 1)
+
+    for con in contours:
+        corners, innerCons = findCornersFromContour(con, img)
+        print(len(innerCons))
+        for innerCon in innerCons:
+            findCirclesFromContour(innerCon, img)
+        #findLinesFromContour(cons, im)
+        
+
+
+    #cv.imshow('dst', im)
+    #while(1):
+    #    if cv.waitKey() == 27:
+    #        cv.imwrite('test.png', im)
+    #        return 0
+
+    cv.imwrite('test.png', img)
+
+    if platform.system() == 'Darwin':       # macOS
+        subprocess.call(('open', "test.png"))
+    elif platform.system() == 'Windows':    # Windows
+        os.startfile("test.png")
+    else:                                   # linux variants
+        subprocess.call(('xdg-open', "test.png"))
+
+def findCornersFromContour(contour, img):
+
+    lastCorner = 0
+    lastAng = 0
+
+    corners = []
+    splitContours = []
+    firstCorner = 0
+
+    for i in range(len(contour)):
+        
+        idxs = [i, (i + 5) % len(contour), (i + 10) % len(contour)]
+
+        vec1 = contour[idxs[0]][0] - contour[idxs[1]][0]
+        vec2 = contour[idxs[1]][0] - contour[idxs[2]][0]
+        ang = np.arccos(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
+        ang = np.rad2deg(ang)
+        if ang > 30:
+            if vecDist(contour[lastCorner][0], contour[idxs[1]][0]) < 10:
+                if lastAng < ang:
+                    lastCorner = idxs[1]
+                    lastAng = ang
+            else:
+                if lastAng > 0:
+                    if len(corners) == 0:
+                        firstCorner = lastCorner
+
+                    corners.append(contour[lastCorner][0])
+                    cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+                    if lastCorner < idxs[1]:
+                        splitContours.append(contour[lastCorner:idxs[1]])
+                    else:
+                        splitContours.append(np.concatenate([contour[lastCorner:], contour[:idxs[1]]]))
+
+                lastCorner = idxs[1]
+                lastAng = ang
+
+    if lastAng > 0:
+        corners.append(contour[lastCorner][0])
+        cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+        if lastCorner < idxs[1]:
+            splitContours.append(contour[lastCorner:idxs[1]])
+        else:
+            splitContours.append(np.concatenate([contour[lastCorner:], contour[:firstCorner]]))
+
+    if len(corners) == 0:
+        return None, contour
+
+    return corners, splitContours
+
+def vecLeng(vec):
+    return np.sqrt(np.dot(vec, vec))
+
+def vecDist(vec1, vec2):
+    return vecLeng(vec1 - vec2)
+
+def findCirclesFromContour(contour, img):
+
+    if vecDist(contour[0][0], contour[-1][0]) < 20:
+        return None, None
+    
+    vecDist(contour[0][0], contour[-1][0])
+
+    idxs = [0, len(contour) // 2, -1]
+
+    a = [0] * 3
+    b = [0] * 3
+    for i in range(3):
+        idx = idxs[i]
+        a[i] = [2 * contour[idx][0][0], 2 * contour[idx][0][1], 1]
+        b[i] = -(np.power(contour[idx][0][0], 2) + np.power(contour[idx][0][1], 2))
+
+    if np.linalg.det(a) == 0:
+        return None, None
+
+    x = np.linalg.solve(a, b)
+    middlePoint = [-x[0], -x[1]]
+    radius = np.sqrt(np.power(middlePoint[0], 2) + np.power(middlePoint[1], 2) - x[2])
+
+    if radius < 3 * vecDist(contour[0][0], contour[-1][0]):
+        cv.circle(img, [int(middlePoint[0]), int(middlePoint[1])], int(radius), (0, 0, 0), 1)
+        cv.circle(img, [int(middlePoint[0]), int(middlePoint[1])], 1, (0, 0, 255), 3)
+        return middlePoint, radius 
+
+    return None, None
+
+def findLinesFromContour(cons, img):
+    for i in range(len(cons) - 10):
+        vec1 = cons[i][0] - cons[i+5][0]
+        vec2 = cons[i+5][0] - cons[i+10][0]
+        ang = np.arccos(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
+        ang = np.rad2deg(ang)
+        if (ang > 20):
+            cv.circle(img, cons[i+5][0], 2, (255, 0, 0), 1)
+
+
 
 if __name__ == "__main__":
     #print("OpenCV version:", cv.__version__)
