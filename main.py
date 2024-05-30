@@ -3,7 +3,7 @@ import numpy as np
 import math
 import subprocess, os, platform
 
-imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
+#imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
 #imgFile = "../Dataset/Selected/ZB_0094_02_sl.png"
 #imgFile = "../Dataset/Selected/ZB_0114_02_sl.png"
 #imgFile = "../Dataset/Selected/ZB_0177_02_sl.png"
@@ -121,7 +121,7 @@ def testHoughCircle():
             cv.imwrite('test.png', src)
             return 0
 
-def testContours():
+def testContours(imgFile):
     img = cv.imread(imgFile)
     imgray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     ret, thresh = cv.threshold(imgray, 200, 255, 0)
@@ -131,7 +131,11 @@ def testContours():
 
     for con in contours:
         corners, innerCons = findCornersFromContour(con, img)
-        print(len(innerCons))
+        if corners == None:
+            findBigCircleFromContour(innerCons, img)
+
+
+
         for innerCon in innerCons:
             findCirclesFromContour(innerCon, img)
         #findLinesFromContour(cons, im)
@@ -239,6 +243,34 @@ def findCirclesFromContour(contour, img):
 
     return None, None
 
+def findBigCircleFromContour(contour, img):
+
+    
+    vecDist(contour[0][0], contour[-1][0])
+
+    idxs = [0, len(contour) // 3, 2 * len(contour) // 3]
+
+    a = [0] * 3
+    b = [0] * 3
+    for i in range(3):
+        idx = idxs[i]
+        a[i] = [2 * contour[idx][0][0], 2 * contour[idx][0][1], 1]
+        b[i] = -(np.power(contour[idx][0][0], 2) + np.power(contour[idx][0][1], 2))
+
+    if np.linalg.det(a) == 0:
+        return None, None
+
+    x = np.linalg.solve(a, b)
+    middlePoint = [-x[0], -x[1]]
+    radius = np.sqrt(np.power(middlePoint[0], 2) + np.power(middlePoint[1], 2) - x[2])
+
+    if radius < 3 * vecDist(contour[0][0], contour[idxs[1]][0]):
+        cv.circle(img, [int(middlePoint[0]), int(middlePoint[1])], int(radius), (0, 0, 0), 1)
+        cv.circle(img, [int(middlePoint[0]), int(middlePoint[1])], 1, (0, 0, 255), 3)
+        return middlePoint, radius 
+
+    return None, None
+
 def findLinesFromContour(cons, img):
     for i in range(len(cons) - 10):
         vec1 = cons[i][0] - cons[i+5][0]
@@ -255,4 +287,12 @@ if __name__ == "__main__":
     #testHoughLine()
     #testHoughCircle()
     #testHarrisCorners()
-    testContours()
+    
+    #testContours("../Dataset/Selected/ZB_0087_02_sl.png")
+    testContours("../Dataset/Selected/ZB_0094_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0114_02_sl.png")
+    testContours("../Dataset/Selected/ZB_0177_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0403_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0476_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0661_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0673_02_sl.png")
