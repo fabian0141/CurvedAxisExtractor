@@ -96,6 +96,10 @@ def findLines(points, img):
             startPoint = betweenPoint
             lines.append(betweenPoint)
 
+    cv.line(img, startPoint.toArr(), endPoint.toArr(), (0,0,0), 1)
+    cv.circle(img, endPoint.toArr(), 3, (255, 100, 100), 2)
+    lines.append(endPoint)
+
     return lines
 
 def findCircles(points, img, columns):
@@ -104,37 +108,115 @@ def findCircles(points, img, columns):
     circles = []
     tresh = 5
     startIdx = 0
+    firstCircleIdx = None
+    #startEndDist = 0
 
     for i in range(1, len(points) - 3):
-        if middlePoint == None:
-            middlePoint, radius = getCircle(startPoint, points[i], points[i+1])
-            if middlePoint == None:
+        if middlePoint is None:
+            middlePoint, radius = getCircle(startPoint, points[i+1], points[i+3])
+            if middlePoint is None:
                 startPoint = points[i]
                 startIdx = i
-            elif abs(middlePoint.dist(points[i+2]) - radius) < tresh and abs(middlePoint.dist(points[i+3]) - radius) < tresh:
-                middlePoint, newRadius = getCircle(startPoint, points[i+1], points[i+3])
-                if middlePoint == None:
-                    circles = circles[:-1]
-                    continue
-                #cv.circle(img, (int(middlePoint[0]), int(middlePoint[1])), int(radius), (255, 100, 100), 2)
-                circles.append((startPoint, points[i+1], points[i+3], middlePoint, newRadius))
-                #print(middlePoint, radius)
+                #startEndDist = 0
+            elif areBetweenPointsInside(middlePoint, radius, points[i:i+3]):
+                circles.append((startPoint, points[i+1], points[i+3], middlePoint, radius))
+                if firstCircleIdx == None:
+                    firstCircleIdx = startIdx
+                #startEndDist = middlePoint.dist(points[i+3])
             else:
                 middlePoint = None
                 startPoint = points[i]
                 startIdx = i
+                #startEndDist = 0
         else:
-            dist = middlePoint.dist(points[i+3])
-            if abs(dist - newRadius) >= tresh:
+            pointDist1 = startPoint.dist(points[(startIdx+i+3) // 2])
+            pointDist2 = startPoint.dist(points[i+3])
+
+            if pointDist1 > pointDist2:
+                middlePoint, radius = getCircle(startPoint, points[(startIdx+i+3) // 6], points[((startIdx+i+3)) // 3])
+            else:
+                middlePoint, radius = getCircle(startPoint, points[(startIdx+i+3) // 2], points[i+3])
+
+            # TODO: better check for if radius is smaller
+            if middlePoint is None:
+                circles = circles[:-1]
+                continue
+
+            if areBetweenPointsInside(middlePoint, radius, points[startIdx+1:i+3]):
+                circles[-1] = (startPoint, points[(startIdx+i+3) // 2], points[i+3], middlePoint, radius)
+                #startEndDist = pointDist
+
+            else:
                 middlePoint = None
                 startPoint = points[i]
                 startIdx = i
-            else:
-                middlePoint, newRadius = getCircle(startPoint, points[(startIdx+i+3) // 2], points[i+3])
-                if middlePoint == None:
+                #startEndDist = 0
+
+    if len(circles) > 0 and circles[-1][2] == points[-1]:
+        if len(circles) > 1:
+            if circles[0][0] == circles[-1][2] and circles[0][4] - circles[-1][4]:
+                middlePoint, radius = getCircle(circles[-1][0], circles[0][0], circles[0][2])
+
+                circles[0] = (circles[-1][0], circles[0][0], circles[0][2], middlePoint, radius)
+                circles = circles[:-1]
+        else:
+            startPoint = circles[-1][0]
+
+            for i in range(1, firstCircleIdx):
+                pointDist1 = startPoint.dist(points[(startIdx+i) // 2])
+                pointDist2 = startPoint.dist(points[i])
+
+                if pointDist1 > pointDist2:
+                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 6], points[((startIdx+i)) // 3])
+                else:
+                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 2], points[i])
+
+                # TODO: better check for if radius is smaller
+                if middlePoint is None:
                     circles = circles[:-1]
                     continue
-                circles[-1] = (startPoint, points[(startIdx+i+3) // 2], points[i+3], middlePoint, newRadius)
+
+                if areBetweenPointsInside(middlePoint, radius, points[startIdx+1:i]):
+                    circles[-1] = (startPoint, points[(startIdx+i) // 2], points[i], middlePoint, radius)
+
+                else:
+                    break
+
+
+    # for i in range(1, len(points) - 3):
+    #     if middlePoint == None:
+    #         middlePoint, radius = getCircle(startPoint, points[i], points[i+1])
+    #         if middlePoint == None:
+    #             startPoint = points[i]
+    #             startIdx = i
+    #         elif abs(middlePoint.dist(points[i+2]) - radius) < tresh and abs(middlePoint.dist(points[i+3]) - radius) < tresh:
+    #             middlePoint, newRadius = getCircle(startPoint, points[i+1], points[i+3])
+    #             if middlePoint == None:
+    #                 circles = circles[:-1]
+    #                 continue
+    #             #cv.circle(img, (int(middlePoint[0]), int(middlePoint[1])), int(radius), (255, 100, 100), 2)
+    #             circles.append((startPoint, points[i+1], points[i+3], middlePoint, newRadius))
+    #             #print(middlePoint, radius)
+    #         else:
+    #             middlePoint = None
+    #             startPoint = points[i]
+    #             startIdx = i
+    #     else:
+    #         dist = middlePoint.dist(points[i+3])
+    #         if abs(dist - newRadius) >= tresh:
+    #             middlePoint = None
+    #             startPoint = points[i]
+    #             startIdx = i
+    #         else:
+    #             if startPoint.dist(points[i+3]) < 100:
+    #                 middlePoint, newRadius = getCircle(startPoint, points[(startIdx+i+3) // 3], points[(2 * (startIdx+i+3)) // 3])
+    #             else:
+    #                 middlePoint, newRadius = getCircle(startPoint, points[(startIdx+i+3) // 2], points[i+3])
+
+    #             if middlePoint == None:
+    #                 circles = circles[:-1]
+    #                 continue
+    #             circles[-1] = (startPoint, points[(startIdx+i+3) // 2], points[i+3], middlePoint, newRadius)
 
     for p1, p2, p3, c, r in circles:
         #cv.circle(img, c.toIntArr(), int(r), (255, 100, 100), 2)
@@ -146,6 +228,15 @@ def findCircles(points, img, columns):
 
 
     return circles
+
+def areBetweenPointsInside(middle, radius, between):
+    for i in range(len(between)):
+        dist = middle.dist(between[i])
+        if abs(dist - radius) > 5:
+            return False
+    
+    return True
+
 
 
 def getCircle(p1, p2, p3):
@@ -213,16 +304,16 @@ if __name__ == "__main__":
     #with Pool(16) as p:
     #    p.map(test, nums)
     
-    nums = [87, 94, 114, 177, 403, 476, 661, 673]
+    #nums = [87, 94, 114, 177, 403, 476, 661, 673]
 
-    with Pool(8) as p:
-        p.map(selectedTest, nums)
+    #with Pool(8) as p:
+    #    p.map(selectedTest, nums)
 
-    # testContours("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
-    # testContours("../Dataset/Selected/ZB_0094_02_sl.png")
+    #testContours("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
+    #testContours("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png")
     # testContours("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
     # testContours("../Dataset/Selected/ZB_0177_02_sl.png")
-    # testContours("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
+    testContours("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
     # testContours("../Dataset/Selected/ZB_0476_02_sl.png", "../Dataset/Selected/ZB_0476_03_co.png")
     # testContours("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png")
     # testContours("../Dataset/Selected/ZB_0673_02_sl.png")

@@ -8,6 +8,11 @@ class CircleArea:
         self.radius = radius
         self.columns = []
         self.curvedWalls = []
+        self.fullCircle = False
+
+        if p1.dist(p3) < 10:
+            self.fullCircle = True
+            return
 
         angel1 = CircleArea.getCircleAngel(p1, middle)
         angel2 = CircleArea.getCircleAngel(p2, middle)
@@ -50,14 +55,24 @@ class CircleArea:
             i += 1
 
     def isInside(self, p):
+        dist = p.dist(self.middle)
+        if dist > self.radius:
+            return False    
+
+        if self.fullCircle:
+            return True
+
         angel = CircleArea.getCircleAngel(p, self.middle)
         angel += (2*np.pi) if self.overflow and self.startAngel > angel else 0
         if self.startAngel < angel < self.endAngel:
-            dist = p.dist(self.middle)
-            return dist <= self.radius 
+            return True
         return False
     
     def drawOutline(self, img, thickness=1):
+        if self.fullCircle:
+            cv.circle(img, self.middle.toIntArr(), int(self.radius), (200, 0, 200), thickness)
+            return
+
         startPoint = Vec2([np.cos(self.startAngel), np.sin(self.startAngel)]) * self.radius + self.middle
         endPoint = Vec2([np.cos(self.endAngel), np.sin(self.endAngel)]) * self.radius + self.middle
 
@@ -96,10 +111,13 @@ class CircleArea:
         for d, c in distCol:
             if c > 1:
                 self.drawCircleCurve(img, d, thickness)
-                print(d)
 
 
     def drawCircleCurve(self, img, radius, thickness=1):
+        if self.fullCircle:
+            cv.circle(img, self.middle.toIntArr(), int(radius), (200, 0, 200), thickness)
+            return
+
         startPoint = Vec2([np.cos(self.startAngel), np.sin(self.startAngel)]) * self.radius + self.middle
         
         angelRange = self.endAngel - self.startAngel if self.startAngel < self.endAngel else 2 * np.pi - self.startAngel + self.endAngel

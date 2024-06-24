@@ -41,6 +41,9 @@ class Vec2:
     def __truediv__(self, scalar):
         return Vec2([self.x / scalar, self.y / scalar])
     
+    def __eq__(self, vec2):
+        return abs(self.x - vec2.x) < 5 and abs(self.y - self.y) < 5
+    
     def dist(self, vec2):
         return abs(self - vec2)
 
