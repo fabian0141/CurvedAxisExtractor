@@ -4,7 +4,7 @@ import math
 import subprocess, os, platform
 from multiprocessing import Pool
 from extractor.vec import Vec2
-from extractor.helper import distancePointToLine
+from extractor.helper import distancePointToLine, angle
 from extractor.area import CircleArea
 
 #imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
@@ -30,10 +30,12 @@ def testContours(imgFile, columnImg, out = "test.png"):
 
     columns = getColumnCenter(columnImg, img)
 
-    for con in contours:
-        miniCons = splitContours(con, img)
-        points = findLines(miniCons, img)
-        circles = findCircles(points, img, columns)
+    for points in contours:
+        miniCons = splitContours(points, img)
+        parts = splitIntoParts(img, points, miniCons)
+        #for part in parts:
+        #    lines = findLines(part, img)
+        #    circles = findCircles(part, lines, img, columns)
 
     for col in columns:
         cv.circle(img, col.toIntArr(), 3, (0, 0, 150), 3)
@@ -49,9 +51,58 @@ def testContours(imgFile, columnImg, out = "test.png"):
             subprocess.call(('xdg-open', "test.png"))
 
 
+def findCornersFromContour(contour, img):
+
+    lastCorner = 0
+    lastAng = 0
+
+    corners = []
+    splitContours = []
+    firstCorner = 0
+
+    for i in range(len(contour)):
+        
+        idxs = [i, (i + 5) % len(contour), (i + 10) % len(contour)]
+
+        vec1 = contour[idxs[0]][0] - contour[idxs[1]][0]
+        vec2 = contour[idxs[1]][0] - contour[idxs[2]][0]
+        ang = np.arccos(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
+        ang = np.rad2deg(ang)
+        if ang > 30:
+            if vecDist(contour[lastCorner][0], contour[idxs[1]][0]) < 10:
+                if lastAng < ang:
+                    lastCorner = idxs[1]
+                    lastAng = ang
+            else:
+                if lastAng > 0:
+                    if len(corners) == 0:
+                        firstCorner = lastCorner
+
+                    corners.append(contour[lastCorner][0])
+                    cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+                    if lastCorner < idxs[1]:
+                        splitContours.append(contour[lastCorner:idxs[1]])
+                    else:
+                        splitContours.append(np.concatenate([contour[lastCorner:], contour[:idxs[1]]]))
+
+                lastCorner = idxs[1]
+                lastAng = ang
+
+    if lastAng > 0:
+        corners.append(contour[lastCorner][0])
+        cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+        if lastCorner < idxs[1]:
+            splitContours.append(contour[lastCorner:idxs[1]])
+        else:
+            splitContours.append(np.concatenate([contour[lastCorner:], contour[:firstCorner]]))
+
+    if len(corners) == 0:
+        return None, contour
+
+    return corners, splitContours
 
 def splitContours(con, img):
-    miniCons = [con[0]]
+    miniCons = [0]
     for i in range(0, len(con) - 10, 10):
         
         max = 0
@@ -59,28 +110,42 @@ def splitContours(con, img):
         for j in range(10):
             dist = distancePointToLine(con[i], con[i+10], con[i+j])
             if dist > 1 and dist > max:
-                #cv.circle(img, con[i+j][0], 0, (0, 0, 0), 1)
+                cv.circle(img, con[i+j].toIntArr(), 0, (0, 0, 0), 1)
                 idx = i+j
                 max = dist
 
         if idx == None:
-            miniCons.append(con[i+10])
-            #cv.circle(img, con[i][0], 1, (255, 0, 0), 1)
-            #cv.line(img, con[i][0], con[i+10][0], (150,150,150), 1)
+            miniCons.append(i+10)
+            cv.circle(img, con[i].toIntArr(), 1, (255, 0, 0), 1)
+            cv.line(img, con[i].toIntArr(), con[i+10].toIntArr(), (150,150,150), 1)
 
         else:
-            miniCons.append(con[idx])
-            miniCons.append(con[i+10])
-            #cv.circle(img, con[i][0], 1, (255, 0, 0), 1)
-            #cv.line(img, con[i][0], con[idx][0], (150,150,150), 1)
+            miniCons.append(idx)
+            miniCons.append(i+10)
+            cv.circle(img, con[i].toIntArr(), 1, (255, 0, 0), 1)
+            cv.line(img, con[i].toIntArr(), con[idx].toIntArr(), (150,150,150), 1)
 
-            #cv.circle(img, con[idx][0], 1, (255, 0, 0), 1)
-            #cv.line(img, con[idx][0], con[i+10][0], (150,150,150), 1)
+            cv.circle(img, con[idx].toIntArr(), 1, (255, 0, 0), 1)
+            cv.line(img, con[idx].toIntArr(), con[i+10].toIntArr(), (150,150,150), 1)
 
     # TODO: handle end by finding corners inside
-    miniCons.append(con[-1])
+    miniCons.append(0)
 
     return miniCons
+
+def splitIntoParts(img, points, con):
+    parts = []
+    startIdx = 0
+    for i in range(0, len(con) - 2):
+        if angle(points[con[i]], points[con[i+1]], points[con[i+2]]) > 45:
+            parts.append(points[startIdx:i+1])
+            #cv.line(img, points[con[startIdx]].toArr(), points[con[i+1]].toArr(), (100,0,0), 1)
+            #cv.circle(img, points[con[i+1]].toArr(), 3, (0, 200, 200), 2)
+
+            startIdx = i+1
+
+    print(len(parts))
+
 
 def findLines(points, img):
     startPoint = points[0]
@@ -109,6 +174,8 @@ def findCircles(points, img, columns):
     tresh = 5
     startIdx = 0
     firstCircleIdx = None
+    lastCircleIdx = None
+
     #startEndDist = 0
 
     for i in range(1, len(points) - 3):
@@ -123,6 +190,7 @@ def findCircles(points, img, columns):
                 if firstCircleIdx == None:
                     firstCircleIdx = startIdx
                 #startEndDist = middlePoint.dist(points[i+3])
+                lastCircleIdx = i+3
             else:
                 middlePoint = None
                 startPoint = points[i]
@@ -133,7 +201,7 @@ def findCircles(points, img, columns):
             pointDist2 = startPoint.dist(points[i+3])
 
             if pointDist1 > pointDist2:
-                middlePoint, radius = getCircle(startPoint, points[(startIdx+i+3) // 6], points[((startIdx+i+3)) // 3])
+                middlePoint, radius = getCircle(startPoint, points[(startIdx+i+3) // 6], points[(startIdx+i+3) // 3])
             else:
                 middlePoint, radius = getCircle(startPoint, points[(startIdx+i+3) // 2], points[i+3])
 
@@ -145,29 +213,33 @@ def findCircles(points, img, columns):
             if areBetweenPointsInside(middlePoint, radius, points[startIdx+1:i+3]):
                 circles[-1] = (startPoint, points[(startIdx+i+3) // 2], points[i+3], middlePoint, radius)
                 #startEndDist = pointDist
-
+                lastCircleIdx = i+3
             else:
                 middlePoint = None
                 startPoint = points[i]
                 startIdx = i
                 #startEndDist = 0
 
-    if len(circles) > 0 and circles[-1][2] == points[-1]:
+    if len(circles) > 0:
+        #combine two circles around end
         if len(circles) > 1:
             if circles[0][0] == circles[-1][2] and circles[0][4] - circles[-1][4]:
                 middlePoint, radius = getCircle(circles[-1][0], circles[0][0], circles[0][2])
 
                 circles[0] = (circles[-1][0], circles[0][0], circles[0][2], middlePoint, radius)
                 circles = circles[:-1]
-        else:
-            startPoint = circles[-1][0]
+                return getCirclesAreas(img, columns, circles)
 
-            for i in range(1, firstCircleIdx):
+        #check for bigger circle at start
+        if circles[0][0] == points[0]:
+            endPoint = circles[0][2]
+
+            for i in range(len(points)-1, lastCircleIdx, -1):
                 pointDist1 = startPoint.dist(points[(startIdx+i) // 2])
                 pointDist2 = startPoint.dist(points[i])
 
                 if pointDist1 > pointDist2:
-                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 6], points[((startIdx+i)) // 3])
+                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 6], points[(startIdx+i) // 3])
                 else:
                     middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 2], points[i])
 
@@ -182,6 +254,29 @@ def findCircles(points, img, columns):
                 else:
                     break
 
+        #check for bigger circle at end
+        elif circles[-1][2] == points[-1]:
+            startPoint = circles[-1][0]
+
+            for i in range(1, firstCircleIdx):
+                pointDist1 = startPoint.dist(points[(startIdx+i) // 2])
+                pointDist2 = startPoint.dist(points[i])
+
+                if pointDist1 > pointDist2:
+                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 6], points[(startIdx+i) // 3])
+                else:
+                    middlePoint, radius = getCircle(startPoint, points[(startIdx+i) // 2], points[i])
+
+                # TODO: better check for if radius is smaller
+                if middlePoint is None:
+                    circles = circles[:-1]
+                    continue
+
+                if areBetweenPointsInside(middlePoint, radius, points[startIdx+1:i]):
+                    circles[-1] = (startPoint, points[(startIdx+i) // 2], points[i], middlePoint, radius)
+
+                else:
+                    break
 
     # for i in range(1, len(points) - 3):
     #     if middlePoint == None:
@@ -218,6 +313,7 @@ def findCircles(points, img, columns):
     #                 continue
     #             circles[-1] = (startPoint, points[(startIdx+i+3) // 2], points[i+3], middlePoint, newRadius)
 
+def getCirclesAreas(img, columns, circles):
     for p1, p2, p3, c, r in circles:
         #cv.circle(img, c.toIntArr(), int(r), (255, 100, 100), 2)
         area = CircleArea(p1, p2, p3, c, r)
@@ -225,7 +321,6 @@ def findCircles(points, img, columns):
         area.testColumns(columns)
         area.drawColumns(img, 3)
         area.findCurves(img, 3)
-
 
     return circles
 
@@ -309,11 +404,11 @@ if __name__ == "__main__":
     #with Pool(8) as p:
     #    p.map(selectedTest, nums)
 
-    #testContours("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
+    testContours("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
     #testContours("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png")
     # testContours("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
     # testContours("../Dataset/Selected/ZB_0177_02_sl.png")
-    testContours("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
+    #testContours("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
     # testContours("../Dataset/Selected/ZB_0476_02_sl.png", "../Dataset/Selected/ZB_0476_03_co.png")
     # testContours("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png")
     # testContours("../Dataset/Selected/ZB_0673_02_sl.png")

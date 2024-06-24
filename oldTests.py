@@ -223,11 +223,11 @@ def findLinesFromContour(cons, img):
     #for i in range(len(cons)):
     #    sum += cons[i][0]
 
-    #angel = np.arcsin(sum[0] / np.sqrt(np.dot(sum, sum)))
+    #angle = np.arcsin(sum[0] / np.sqrt(np.dot(sum, sum)))
 
 
 
-    angel = None
+    angle = None
     distance = 0
     startPoint = cons[0][0]
 
@@ -236,12 +236,12 @@ def findLinesFromContour(cons, img):
 
         vecD = startPoint - vec1
 
-        newAngel = np.arcsin(vecD[0] / np.sqrt(np.dot(vecD, vecD)))
+        newAngle = np.arcsin(vecD[0] / np.sqrt(np.dot(vecD, vecD)))
 
-        if angel != None:
-            if abs(newAngel - angel) > 0.1:
+        if angle != None:
+            if abs(newAngle - angle) > 0.1:
                 cv.circle(img, vec1, 2, (255, 0, 0), 1)
-                angel = newAngel
+                angle = newAngle
 
         else:
-            angel = newAngel
+            angle = newAngle
