@@ -31,8 +31,9 @@ def testContours(imgFile, columnImg, out = "test.png"):
     columns = getColumnCenter(columnImg, img)
 
     for points in contours:
-        miniCons = splitContours(points, img)
-        parts = splitIntoParts(img, points, miniCons)
+        findCornersFromContour(points, img)
+        #miniCons = splitContours(points, img)
+        #parts = splitIntoParts(img, points, miniCons)
         #for part in parts:
         #    lines = findLines(part, img)
         #    circles = findCircles(part, lines, img, columns)
@@ -53,23 +54,23 @@ def testContours(imgFile, columnImg, out = "test.png"):
 
 def findCornersFromContour(contour, img):
 
-    lastCorner = 0
     lastAng = 0
 
     corners = []
     splitContours = []
-    firstCorner = 0
+    step = 5
+    fullStep = step * 2
+    firstCorner = -fullStep
+    lastCorner = -fullStep
 
-    for i in range(len(contour)):
+
+    for i in range(-fullStep, len(contour) - fullStep):
         
-        idxs = [i, (i + 5) % len(contour), (i + 10) % len(contour)]
+        idxs = [i, (i + step) % len(contour), (i + fullStep) % len(contour)]
+        ang = angle(contour[i], contour[i+step], contour[i+fullStep])
 
-        vec1 = contour[idxs[0]][0] - contour[idxs[1]][0]
-        vec2 = contour[idxs[1]][0] - contour[idxs[2]][0]
-        ang = np.arccos(np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2)))
-        ang = np.rad2deg(ang)
         if ang > 30:
-            if vecDist(contour[lastCorner][0], contour[idxs[1]][0]) < 10:
+            if contour[lastCorner].dist(contour[idxs[1]]) < fullStep:
                 if lastAng < ang:
                     lastCorner = idxs[1]
                     lastAng = ang
@@ -78,8 +79,8 @@ def findCornersFromContour(contour, img):
                     if len(corners) == 0:
                         firstCorner = lastCorner
 
-                    corners.append(contour[lastCorner][0])
-                    cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+                    corners.append(contour[lastCorner])
+                    cv.circle(img, contour[lastCorner].toIntArr(), 3, (255, 0, 0), 2)
                     if lastCorner < idxs[1]:
                         splitContours.append(contour[lastCorner:idxs[1]])
                     else:
@@ -89,8 +90,8 @@ def findCornersFromContour(contour, img):
                 lastAng = ang
 
     if lastAng > 0:
-        corners.append(contour[lastCorner][0])
-        cv.circle(img, contour[lastCorner][0], 3, (255, 0, 0), 2)
+        corners.append(contour[lastCorner])
+        cv.circle(img, contour[lastCorner].toIntArr(), 3, (255, 0, 0), 2)
         if lastCorner < idxs[1]:
             splitContours.append(contour[lastCorner:idxs[1]])
         else:
@@ -99,6 +100,7 @@ def findCornersFromContour(contour, img):
     if len(corners) == 0:
         return None, contour
 
+    print(len(corners))
     return corners, splitContours
 
 def splitContours(con, img):
