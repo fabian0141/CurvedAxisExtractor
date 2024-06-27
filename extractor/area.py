@@ -3,12 +3,12 @@ import numpy as np
 from extractor.vec import Vec2
 
 class CircleArea:
-    def __init__(self, p1, p2, p3, middle, radius):
+    def __init__(self, p1, p2, p3, middle, radius, fullCircle):
         self.middle = middle
         self.radius = radius
         self.columns = []
         self.curvedWalls = []
-        self.fullCircle = False
+        self.fullCircle = fullCircle
 
         if p1.dist(p3) < 10:
             self.fullCircle = True
@@ -25,9 +25,14 @@ class CircleArea:
         if (a + b + c) % 2 == 1:
             self.startAngel = angel1
             self.endAngel = angel3
+            self.startCorner = p1
+            self.endCorner = p3
+
         else:
             self.startAngel = angel3
             self.endAngel = angel1
+            self.startCorner = p3
+            self.endCorner = p1
 
         if self.endAngel < self.startAngel:
             self.endAngel += 2 * np.pi
