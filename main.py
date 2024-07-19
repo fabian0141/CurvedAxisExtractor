@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from extractor.vec import Vec2
 from extractor.helper import distancePointToLine, angle
 from extractor.area import CircleArea
+from extractor.contour import Contour, ContourPart
 
 #imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
 #imgFile = "../Dataset/Selected/ZB_0094_02_sl.png"
@@ -16,28 +17,31 @@ from extractor.area import CircleArea
 #imgFile = "../Dataset/Selected/ZB_0661_02_sl.png"
 #imgFile = "../Dataset/Selected/ZB_0673_02_sl.png"
 
-def testContours(imgFile, columnImg, out = "test.png"):
+def extractPartsAndWalls(imgFile, columnImg, out = "test.png"):
+    #load image
     img = cv.imread(imgFile)
     if img is None:
         return
     
+    # convert to black white and get contour
     imgray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     ret, thresh = cv.threshold(imgray, 200, 255, 0)
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
     cv.drawContours(img, contours, -1, (0,255,0), 1)
 
-    contours = Vec2.convertContour(contours)
+    # convert contour pixel array to contour list
+    contours = Contour.convertPixelContour(contours)
 
     columns = getColumnCenter(columnImg, img)
     circles = []
 
     for points in contours:
         #findCornersFromContour(points, img)
-        miniCons = splitContours(points, img)
-        corners = findLines(points, miniCons, img)
-        parts = splitIntoParts(img, points, corners)
-        for part in parts:
-           circles.extend(findCircles(part, img, columns))
+        miniCons = ContourPart.getContourParts(points, img)
+        #corners = findLines(points, miniCons, img)
+        #parts = splitIntoParts(img, points, corners)
+        #for part in parts:
+        #   circles.extend(findCircles(part, img, columns))
 
     #checkNeighbourCircles(circles)
 
@@ -53,7 +57,6 @@ def testContours(imgFile, columnImg, out = "test.png"):
             os.startfile("test.png")
         else:                                   # linux variants
             subprocess.call(('xdg-open', "test.png"))
-
 
 def findCornersFromContour(contour, img):
 
@@ -105,66 +108,6 @@ def findCornersFromContour(contour, img):
 
     print(len(corners))
     return corners, splitContours
-
-def splitContours(con, img):
-    miniCons = []
-    i = 0
-    leng = len(con)
-    firstIdx = None
-    count = 0
-
-    while True:
-        max = 0
-
-        #i10 = (i + 10) % leng 
-        if firstIdx != None:
-            outer = np.min([firstIdx - i, 20])
-        else: 
-            outer = 20
-
-        i20 = (i + outer) % leng 
-        idx = (i+10) % leng
-
-
-
-        for j in range(outer):
-            ij = (i+j) % leng
-            dist = distancePointToLine(con[i], con[i20], con[ij])
-            if dist > 1 and dist > max:
-                #cv.circle(img, con[ij].toIntArr(), 0, (0, 0, 0), 1)
-                idx = ij
-                max = dist
-
-        if outer < 20 and max == 0:
-            break
-
-        if idx >= i:
-            count += idx - i
-        else:
-            count += idx + leng - i
-
-        if firstIdx != None and count >= firstIdx:
-            break
-
-
-
-        miniCons.append(idx)
-        #cv.circle(img, con[idx].toIntArr(), 1, (255, 0, 0), 1)
-        #cv.line(img, con[i].toIntArr(), con[idx].toIntArr(), (150,150,150), 1)
-
-
-
-        i = idx
-
-
-        if firstIdx == None:
-            firstIdx = leng + i
-           #cv.circle(img, con[idx].toIntArr(), 1, (255, 0, 0), 1)
-           #cv.line(img, con[idx].toIntArr(), con[i+10].toIntArr(), (150,150,150), 1)
-
-    # TODO: handle end by finding corners inside
-
-    return miniCons
 
 def splitIntoParts(img, points, corners):
     parts = []
@@ -416,7 +359,7 @@ def getCircle(p1, p2, p3):
 def getColumnCenter(imgFile, img):
     columnImg = cv.imread(imgFile, cv.IMREAD_GRAYSCALE)
     ret, thresh = cv.threshold(columnImg, 200, 255, 0)
-    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE) 
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
     contours = contours[1:]
     columns = []
 
@@ -436,7 +379,7 @@ def test(num):
     fn_slab = in_path + "02_sl/" + prefix + str(num) + '_02_sl.png'
     #fn_column = in_path + "03_co/" + prefix + str(num) + '_03_co.png'
 
-    testContours(fn_slab, "testOutput/" + str(num) + ".png")
+    extractPartsAndWalls(fn_slab, "testOutput/" + str(num) + ".png")
 
 def selectedTest(num):
     print(num)
@@ -445,7 +388,7 @@ def selectedTest(num):
     fn_slab = in_path + "02_sl/" + prefix + str(num) + '_02_sl.png'
     fn_column = in_path + "03_co/" + prefix + str(num) + '_03_co.png'
 
-    testContours(fn_slab, fn_column, "selectedOutput/" + str(num) + ".png")
+    extractPartsAndWalls(fn_slab, fn_column, "selectedOutput/" + str(num) + ".png")
 
     print("Finshed: " + str(num))
 
@@ -460,18 +403,18 @@ if __name__ == "__main__":
     #with Pool(16) as p:
     #    p.map(test, nums)
     
-    nums = [87, 94, 114, 177, 403, 476, 661, 673]
+    #nums = [87, 94, 114, 177, 403, 476, 661, 673]
 
-    with Pool(8) as p:
-        p.map(selectedTest, nums)
+    #with Pool(8) as p:
+    #    p.map(selectedTest, nums)
     
     # 94 117 
-    #testContours("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
-    #testContours("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png")
-    # testContours("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
-    # testContours("../Dataset/Selected/ZB_0177_02_sl.png")
-    #testContours("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
-    #testContours("../Dataset/Selected/ZB_0476_02_sl.png", "../Dataset/Selected/ZB_0476_03_co.png")
-    #testContours("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png")
-    # testContours("../Dataset/Selected/ZB_0673_02_sl.png")
+    extractPartsAndWalls("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
+    #extractPartsAndWalls("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png")
+    # extractPartsAndWalls("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
+    # extractPartsAndWalls("../Dataset/Selected/ZB_0177_02_sl.png")
+    #extractPartsAndWalls("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
+    #extractPartsAndWalls("../Dataset/Selected/ZB_0476_02_sl.png", "../Dataset/Selected/ZB_0476_03_co.png")
+    #extractPartsAndWalls("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png")
+    # extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png")
 
