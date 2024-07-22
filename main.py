@@ -9,15 +9,8 @@ from extractor.area import CircleArea
 from extractor.contour import Contour
 from extractor.formfinder import findLines, splitIntoSegments, findCircles
 from extractor.forms import Segment, Circle
+from extractor.column import getColumnCenter
 
-#imgFile = "../Dataset/Selected/ZB_0087_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0094_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0114_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0177_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0403_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0476_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0661_02_sl.png"
-#imgFile = "../Dataset/Selected/ZB_0673_02_sl.png"
 
 def extractPartsAndWalls(imgFile, columnImg, out = "test.png"):
     #load image
@@ -34,7 +27,7 @@ def extractPartsAndWalls(imgFile, columnImg, out = "test.png"):
     # convert contour pixel array to contour list
     contours = Contour.convertPixelContour(contours)
 
-    columns = getColumnCenter(columnImg, img)
+    columns = getColumnCenter(columnImg)
     circleAreas = []
 
     for points in contours:
@@ -60,7 +53,7 @@ def extractPartsAndWalls(imgFile, columnImg, out = "test.png"):
     #checkNeighbourCircles(circles)
 
     for col in columns:
-        cv.circle(img, col.toIntArr(), 3, (0, 0, 150), 3)
+        cv.circle(img, col.toIntArr(), 3, (0, 0, 150), 5)
 
     cv.imwrite(out, img)
 
@@ -83,22 +76,6 @@ def checkNeighbourCircles(circles):
 
             if circles[i].endCorner == circles[i].startCorner:
                 neighbourCircles.append
-
-def getColumnCenter(imgFile, img):
-    columnImg = cv.imread(imgFile, cv.IMREAD_GRAYSCALE)
-    ret, thresh = cv.threshold(columnImg, 200, 255, 0)
-    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-    contours = contours[1:]
-    columns = []
-
-    for con in contours:
-        outline = con[:,0]
-        center, radius = cv.minEnclosingCircle(outline)
-        center = Vec2(center)
-        #cv.circle(img, center.toIntArr(), int(radius - 3), (0, 0, 150), 3)
-        columns.append(center)
-
-    return columns
 
 def test(num):
     print(num)

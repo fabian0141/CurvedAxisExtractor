@@ -289,7 +289,27 @@ def findCircles(part, img, columns):
 
     return []
 
+def drawOutline(self, img, thickness=1):
+    if self.circle.fullCircle:
+        cv.circle(img, self.circle.middle.toIntArr(), int(self.circle.radius), (200, 0, 200), thickness)
+        return
 
+    startPoint = Vec2([np.cos(self.circle.startAngle), np.sin(self.circle.startAngle)]) * self.circle.radius + self.circle.middle
+    endPoint = Vec2([np.cos(self.circle.endAngle), np.sin(self.circle.endAngle)]) * self.circle.radius + self.circle.middle
+
+    cv.line(img, self.circle.middle.toIntArr(), startPoint.toIntArr(), (200, 0, 200), thickness)
+    cv.line(img, self.circle.middle.toIntArr(), endPoint.toIntArr(), (200, 0, 200), thickness)
+
+    self.drawCircleCurve(img, self.circle.radius, thickness)
+
+    # angleRange = self.endAngle - self.startAngle if self.startAngle < self.endAngle else 2 * np.pi - self.startAngle + self.endAngle
+    # rangeParts = int(angleRange * self.radius / 10)
+    # for i in range(rangeParts):
+    #    angle = self.startAngle + angleRange * i / rangeParts
+    #    point = Vec2([np.cos(angle), np.sin(angle)]) * self.radius + self.middle
+    #
+    #    cv.line(img, startPoint.toIntArr(), point.toIntArr(), (200, 0, 200), thickness)
+    #    startPoint = point
 
 
 

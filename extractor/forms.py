@@ -1,5 +1,6 @@
 import numpy as np
 from extractor.vec import Vec2
+import cv2 as cv
 
 class Segment:
     def __init__(self):
@@ -28,9 +29,6 @@ class Segment:
     
     def dist(self, i1, i2):
         return self.parts[i1].first.dist(self.parts[i2-1].last)
-        
-
-
 
 class Line:
     def __init__(self, points):
@@ -144,3 +142,45 @@ class Circle:
             
         return True
 
+    def isInside(self, p):
+        dist = p.dist(self.middle)
+        if dist > self.radius:
+            return False    
+
+        if self.fullCircle:
+            return True
+
+        angle = Circle.getCircleAngle(p, self.middle)
+        angle += (2*np.pi) if self.overflow and self.startAngle > angle else 0
+        if self.startAngle < angle < self.endAngle:
+            return True
+        return False
+    
+    def drawOutline(self, img, thickness=1):
+        if self.fullCircle:
+            cv.circle(img, self.middle.toIntArr(), int(self.radius), (200, 0, 200), thickness)
+            return
+
+        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
+        endPoint = Vec2([np.cos(self.endAngle), np.sin(self.endAngle)]) * self.radius + self.middle
+
+        cv.line(img, self.middle.toIntArr(), startPoint.toIntArr(), (200, 0, 200), thickness)
+        cv.line(img, self.middle.toIntArr(), endPoint.toIntArr(), (200, 0, 200), thickness)
+
+        self.drawCircleCurve(img, self.radius, thickness)
+
+    def drawCircleCurve(self, img, radius, thickness=1):
+        if self.fullCircle:
+            cv.circle(img, self.middle.toIntArr(), int(radius), (200, 0, 200), thickness)
+            return
+
+        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
+        
+        angleRange = self.endAngle - self.startAngle if self.startAngle < self.endAngle else 2 * np.pi - self.startAngle + self.endAngle
+        rangeParts = int(angleRange * radius / 10)
+        for i in range(rangeParts):
+            angle = self.startAngle + angleRange * i / rangeParts
+            point = Vec2([np.cos(angle), np.sin(angle)]) * radius + self.middle
+
+            cv.line(img, startPoint.toIntArr(), point.toIntArr(), (200, 0, 200), thickness)
+            startPoint = point
