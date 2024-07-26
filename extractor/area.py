@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 from extractor.vec import Vec2
 from extractor.forms import Circle
+from extractor.helper import angle
 
 class CircleArea:
     def __init__(self, circle, fullCircle):
@@ -46,7 +47,38 @@ class CircleArea:
         for cur in self.curves:
             self.circle.drawCircleCurve(img, cur, thickness)
 
+        for col in self.columns:
+            middle = self.circle.middle
+            vec = col - middle
+            d = col.dist(middle)
+            d = self.circle.radius / d
+            start = middle + vec * d
+
+            alMiddle = self.circle.allignedMiddle
+            if middle == alMiddle:
+                end = middle
+            else:
+                end = CircleArea.linesIntersection(self.circle.start, alMiddle, start, middle)
+                if end is None:
+                    end = CircleArea.linesIntersection(self.circle.end, alMiddle, start, middle)
+
+            cv.line(img, end.toIntArr(), start.toIntArr(), (200, 0, 200), thickness)
+
         self.circle.drawOutline(img, thickness)
+
+    def linesIntersection(p1, p2, q1, q2):
+        v1 = p1 - p2
+        v2 = q1 - q2
+        v3 = p1 - q1
+
+        denom = v1.x * v2.y - v1.y * v2.x
+
+        t = (v3.x * v2.y - v3.y * v2.x) / denom
+        u = -(v1.x * v3.y - v1.y * v3.x) / denom
+        if 0 <= t <= 1 and 0 <= u <= 1:
+            return p1 - v1*t
+
+        return None
 
 
 
@@ -58,7 +90,6 @@ class CircleArea:
             area.testColumns(columns)
             #area.drawColumns(img, 3)
             area.findCurves(img, 3)
-            area.drawArea(img, 3)
             areas.append(area)
         return areas
 

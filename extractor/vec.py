@@ -11,7 +11,7 @@ class Vec2:
             raise ValueError("Vec2 wrong values")
         self.x = arr[0]
         self.y = arr[1]
-        self = arr
+        self.arr = arr
 
     def __getitem__(self, item):
         if item == 0:
@@ -20,7 +20,7 @@ class Vec2:
             return self.y
         
     def toArr(self):
-        return (self.x, self.y)
+        return self.arr
     
     def __add__(self, vec2):
         return Vec2([self.x + vec2.x, self.y + vec2.y])
@@ -42,10 +42,13 @@ class Vec2:
         return Vec2([self.x / scalar, self.y / scalar])
     
     def __eq__(self, vec2):
-        return abs(self.x - vec2.x) < 5 and abs(self.y - self.y) < 5
+        return abs(self.x - vec2.x) < 5 and abs(self.y - vec2.y) < 5
     
     def dist(self, vec2):
         return abs(self - vec2)
+    
+    def dot(self, vec2):
+        return self.x*vec2.x + self.y*vec2.y
 
     def convertContour(contours):
         vecContour = []

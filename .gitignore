@@ -163,3 +163,5 @@ cython_debug/
 /selectedOutput
 
 test.png
+test.*
+/out

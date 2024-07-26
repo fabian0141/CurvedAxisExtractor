@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "subProcess": true
+            "subProcess": true,
+            "env": {"PYDEVD_USE_CYTHON": "0"}
         }
     ]
 }

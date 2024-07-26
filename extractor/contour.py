@@ -5,11 +5,16 @@ from extractor.forms import Line
 
 
 class Contour:
-    def __init__(self, contour):
-        self.cons = []
-        for con in contour:
-            self.cons.append(Vec2(con[0]))
+    def __init__(self, contour=None, vecContour=None):
+        if contour is not None:
+            self.cons = []
+            for con in contour:
+                self.cons.append(Vec2(con[0]))
         
+        if vecContour is not None:
+            self.cons = vecContour
+
+
         #self.cons.append(Vec2(contour[0][0]))
 
     def convertPixelContour(pixelContours):
@@ -17,9 +22,28 @@ class Contour:
         pixelContours = pixelContours[1:] 
         contours = []
         for pixCon in pixelContours:
-            contours.append(Contour(pixCon))
+            contours.append(Contour(contour=pixCon))
 
         return contours
+    
+    def convertContour(contour):
+        contours = []
+        vecContour = []
+        i = 0
+        print(contour[0], 0)
+        for p in contour:
+            i += 1
+            if p[2] < 0:
+                contours.append(Contour(vecContour=vecContour))
+                vecContour = []
+                print(contour[i-2], i-2)
+                print(contour[i], i)
+                continue
+
+            vecContour.append(Vec2(p[:2]))
+
+        return contours
+                
     
     def __getitem__(self, idx):
         return self.cons[idx]
@@ -64,7 +88,7 @@ class Contour:
 
         for con in conParts:
             cv.circle(img, con.first.toIntArr(), 1, (255, 0, 0), 1)
-            cv.line(img, con.first.toIntArr(), con.last.toIntArr(), (150,150,150), 1)
+            #cv.line(img, con.first.toIntArr(), con.last.toIntArr(), (150,150,150), 1)
 
         return conParts
 

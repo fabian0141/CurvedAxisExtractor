@@ -55,6 +55,7 @@ class Circle:
         self.middle = middle
         self.radius = radius
         self.fullCircle = False
+        self.allignedMiddle = middle
 
         if start.dist(end) < 30:
             self.fullCircle = True
@@ -120,7 +121,7 @@ class Circle:
         x = np.linalg.solve(a, b)
         middlePoint = Vec2([-x[0], -x[1]])
         radius = np.sqrt(np.power(middlePoint.x, 2) + np.power(middlePoint.y, 2) - x[2])
-        if radius < 100:
+        if radius < 100 or radius > 3000:
             return None
 
         return Circle(middlePoint, radius, p1, p2, seg[end-1].last) 
@@ -129,7 +130,7 @@ class Circle:
 
         for i in range(len(between)):
             dist = self.middle.dist(between[i].first)
-            if abs(dist - self.radius) > 5:
+            if abs(dist - self.radius) > 3:
                 return False
         
         return True
@@ -157,21 +158,25 @@ class Circle:
         return False
     
     def drawOutline(self, img, thickness=1):
+        color = (0, 250, 150)
         if self.fullCircle:
-            cv.circle(img, self.middle.toIntArr(), int(self.radius), (200, 0, 200), thickness)
+            cv.circle(img, self.middle.toIntArr(), int(self.radius), color, thickness)
             return
 
         startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
         endPoint = Vec2([np.cos(self.endAngle), np.sin(self.endAngle)]) * self.radius + self.middle
 
-        cv.line(img, self.middle.toIntArr(), startPoint.toIntArr(), (200, 0, 200), thickness)
-        cv.line(img, self.middle.toIntArr(), endPoint.toIntArr(), (200, 0, 200), thickness)
+        cv.line(img, self.allignedMiddle.toIntArr(), startPoint.toIntArr(), color, thickness)
+        cv.line(img, self.allignedMiddle.toIntArr(), endPoint.toIntArr(), color, thickness)
 
-        self.drawCircleCurve(img, self.radius, thickness)
+        self.drawCircleCurve(img, self.radius, thickness, color)
 
-    def drawCircleCurve(self, img, radius, thickness=1):
+    def drawCircleCurve(self, img, radius, thickness=1, color=None):
+        if color is None:
+            color = (200, 0, 200)
+
         if self.fullCircle:
-            cv.circle(img, self.middle.toIntArr(), int(radius), (200, 0, 200), thickness)
+            cv.circle(img, self.middle.toIntArr(), int(radius), color, thickness)
             return
 
         startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
@@ -182,5 +187,5 @@ class Circle:
             angle = self.startAngle + angleRange * i / rangeParts
             point = Vec2([np.cos(angle), np.sin(angle)]) * radius + self.middle
 
-            cv.line(img, startPoint.toIntArr(), point.toIntArr(), (200, 0, 200), thickness)
+            cv.line(img, startPoint.toIntArr(), point.toIntArr(), color, thickness)
             startPoint = point
