@@ -1,5 +1,9 @@
 from extractor.helper import distancePointToLine, angle
-from extractor.forms import Segment, Line, Circle
+from extractor.forms import Segment, Line
+from extractor.circle import Circle
+
+DEGREE = 57.2957795131
+DEG150 = 2.61799387799
 
 def findLines(parts):
     startPoint = parts[0].first
@@ -50,8 +54,7 @@ def splitIntoSegments(img, lines):
 
     for i in range(0, len(lines)-1):
         segments[-1] += lines[i]
-
-        if angle(lines[i].first, lines[i].last, lines[i+1].last) > 30:
+        if angle(lines[i].first, lines[i].last, lines[i+1].last) < DEG150:
             segments.append(Segment())
 
     segments[-1] += lines[-1]
@@ -59,7 +62,7 @@ def splitIntoSegments(img, lines):
     if len(segments) == 1:
         return segments
 
-    if angle(lines[-1].first, lines[-1].last, lines[0].last) < 30:
+    if angle(lines[-1].first, lines[-1].last, lines[0].last) > DEG150:
         segments[0].prepend(segments[-1])
         segments.pop(-1)
     return segments

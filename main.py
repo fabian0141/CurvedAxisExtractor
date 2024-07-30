@@ -7,10 +7,12 @@ from extractor.vec import Vec2
 from extractor.area import CircleArea
 from extractor.contour import Contour
 from extractor.formfinder import findLines, splitIntoSegments, findCircles
-from extractor.forms import Segment, Circle
+from extractor.forms import Segment
+from extractor.circle import Circle
+
 from extractor.column import getColumnCenter
-import svgwrite
-import contour
+#import svgwrite
+#import contour
 
 
 def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
@@ -43,14 +45,14 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
         miniCons = Contour.getContourParts(points, img)
         lines = findLines(miniCons)
 
-        #for i in range(-1, len(lines)-1):
-        #    cv.line(img, lines[i].first.toIntArr(), lines[i+1].first.toIntArr(), (100,100,100), 1)
-        #    cv.circle(img, lines[i+1].first.toIntArr(), 2, (255, 100, 100), 2)
+        for i in range(-1, len(lines)-1):
+            cv.line(img, lines[i].first.toIntArr(), lines[i+1].first.toIntArr(), (100,100,100), 1)
+            cv.circle(img, lines[i+1].first.toIntArr(), 2, (255, 100, 100), 2)
         
         segments = splitIntoSegments(img, lines)
-        #for seg in segments:
-        #    cv.line(img, seg.parts[0].first.toIntArr(), seg.parts[-1].last.toIntArr(), (0,0,0), 1)
-        #    cv.circle(img, seg.parts[0].first.toIntArr(), 3, (0, 150, 250), 2)
+        for seg in segments:
+            cv.line(img, seg.parts[0].first.toIntArr(), seg.parts[-1].last.toIntArr(), (0,0,0), 1)
+            cv.circle(img, seg.parts[0].first.toIntArr(), 3, (0, 150, 250), 2)
 
         for seg in segments:
             circles = findCircles(seg)
@@ -58,7 +60,7 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
             if len(circles) > 0:
                 circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
 
-    checkNeighboringCircleAreas(circleAreas, img)
+    CircleArea.checkNeighboringCircleAreas(circleAreas, img)
 
     for area in circleAreas:
         area.drawArea(img, 3)
@@ -75,100 +77,6 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
             os.startfile("test.png")
         else:                                   # linux variants
             subprocess.call(('xdg-open', "test.png"))
-
-
-def checkNeighboringCircleAreas(circleAreas, img):
-    circleData = []
-
-    for i in range(len(circleAreas)):
-        c = circleAreas[i].circle
-        if (c.fullCircle):
-            continue
-
-        ang = angle(c.start, c.end, c.middle)
-        circleData.append([i, c.start, c.end, c.middle, ang])
-
-    circlePairs = []
-
-
-    for i in range(len(circleData)):
-        for j in range(i+1, len(circleData)):
-
-            # connect end with start
-            if circleData[i][2] == circleData[j][1]:
-                ang = circleData[i][4] + circleData[j][4]
-                if ang < 0:
-                    continue
-                ang -= angle(circleData[i][1], circleData[i][2], circleData[j][2])
-                circlePairs.append((i, j, ang))
-
-            if circleData[j][2] == circleData[i][1]:
-                ang = circleData[i][4] + circleData[j][4]
-                if ang < 0:
-                    continue
-
-                ang -= angle(circleData[j][1], circleData[j][2], circleData[i][2])
-                circlePairs.append((j, i, ang))
-
-    circlePairs = sorted(circlePairs, key=lambda x: x[2])
-    marked = [] 
-
-
-    while len(circlePairs) > 0:
-        val = circlePairs[0][2] / 2
-        n1 = circlePairs[0][0]
-        n2 = circlePairs[0][1]
-        allignMiddle(circleAreas[n1].circle, val, img)
-        allignMiddle(circleAreas[n2].circle, val, img)
-        circlePairs.pop(0)
-        checkPairs(circleAreas, img, circlePairs, val, n1, n2)
-
-def checkPairs(circleAreas, img, circlePairs, val, n1, n2=None):
-    
-    i = 0
-    while i < len(circlePairs):
-
-        if circlePairs[i][0] == n1 or circlePairs[i][0] == n2:
-            val = circlePairs[i][2] - val
-            n1 = circlePairs[i][1]
-            circlePairs.pop(i)
-            allignMiddle(circleAreas[n1].circle, val, img)
-            checkPairs(circleAreas, img, circlePairs, val, n1)
-            continue
-
-        if circlePairs[i][1] == n1 or circlePairs[i][1] == n2:
-            val = circlePairs[i][2] - val
-            n1 = circlePairs[i][0]
-            allignMiddle(circleAreas[n1].circle, val, img)
-            circlePairs.pop(i)
-            checkPairs(circleAreas, img, circlePairs, val, n1)
-            continue
-
-        i += 1
-
-def allignMiddle(circle, ang, img):
-    if circle.allignedMiddle != circle.middle:
-        return
-
-    ang = angle(circle.start, circle.end, circle.middle) - ang 
-    test = ang * 180 / np.pi
-    m = (circle.start + circle.end) / 2
-    dir = circle.end - circle.start
-    dir = Vec2([-dir.y, dir.x])
-    h = np.tan(ang) / 2
-    middle = m + dir*h
-
-    #cv.circle(img, middle.toIntArr(), 2, (200, 100, 100), 2)
-    #print(middle)
-    circle.allignedMiddle = middle
-
-def angle(p1, p2, p3):
-    line1 = p2-p1
-    line2 = p2-p3
-
-    d = line1.dot(line2)
-    n = abs(line1)*abs(line2)
-    return np.arccos(d / n)
 
 def circleLinesIntersect(c1, c2):
     tests = [
@@ -273,7 +181,7 @@ if __name__ == "__main__":
     with Pool(8) as p:
         p.map(selectedTest, nums)
 
-    #extractPartsAndWalls("../Dataset/02_sl/ZB_0087_02_sl.png", "../Dataset/03_co/ZB_0087_03_co.png", "../Dataset/07_os/ZB_0087_07_os.png")
+    extractPartsAndWalls("../Dataset/02_sl/ZB_0087_02_sl.png", "../Dataset/03_co/ZB_0087_03_co.png", "../Dataset/07_os/ZB_0087_07_os.png")
     #extractPartsAndWalls("../Dataset/02_sl/ZB_0403_02_sl.png", "../Dataset/03_co/ZB_0403_03_co.png", "../Dataset/07_os/ZB_0403_07_os.png")
     #extractPartsAndWalls("../Dataset/02_sl/ZB_0476_02_sl.png", "../Dataset/03_co/ZB_0476_03_co.png", "../Dataset/07_os/ZB_0476_07_os.png")
 
@@ -289,7 +197,7 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
     #testContour("../Dataset/Selected/ZB_0673_07_os.png")
-    testContour("../Dataset/07_os/ZB_0087_07_os.png")
+    #testContour("../Dataset/07_os/ZB_0087_07_os.png")
     #testContour("../Dataset/07_os/ZB_0476_07_os.png")
 
     #arr1 = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float64)
