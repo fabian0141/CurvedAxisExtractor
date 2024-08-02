@@ -96,9 +96,9 @@ class Circle:
             
         return True
 
-    def isInside(self, p):
+    def isInside(self, p, checkRadius=True):
         dist = p.dist(self.middle)
-        if dist > self.radius:
+        if checkRadius and dist > self.radius:
             return False    
 
         if self.fullCircle:

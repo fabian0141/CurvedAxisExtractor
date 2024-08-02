@@ -11,3 +11,14 @@ def angle(p1, p2, p3):
     d = line1.dot(line2)
     n = abs(line1)*abs(line2)
     return np.arccos(d / n)
+
+def quadraticSolver(a, b, c):
+    disc = b**2 - 4*a*c
+    if disc < 0:
+        return None, None
+    
+    disc = np.sqrt(disc)
+    div = a*2
+    t1 = (-b + disc) / div 
+    t2 = (-b - disc) / div
+    return t1, t2

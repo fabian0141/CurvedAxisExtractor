@@ -117,7 +117,6 @@ class CircleArea:
             circlePairs.pop(0)
             CircleArea.checkPairs(circleAreas, img, circlePairs, val, n1, n2)
 
-
     def checkPairs(circleAreas, img, circlePairs, val, n1, n2=None):
         
         i = 0
@@ -140,6 +139,16 @@ class CircleArea:
                 continue
 
             i += 1
+
+    def getWalls(self):
+        walls = [
+            self.circle,
+            (self.start, self.circle.allignMiddle),
+            (self.end, self.circle.allignMiddle)
+        ]
+
+        return walls
+
 
 class PolygonArea:
     def __init__(self, points):

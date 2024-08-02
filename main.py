@@ -61,6 +61,11 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
                 circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
 
     CircleArea.checkNeighboringCircleAreas(circleAreas, img)
+    
+    walls = []
+    for area in circleAreas:
+        walls.extend(area.getWalls())
+
 
     for area in circleAreas:
         area.drawArea(img, 3)
