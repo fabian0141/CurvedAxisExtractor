@@ -1,5 +1,5 @@
 from extractor.vec import Vec2
-from extractor.helper import distancePointToLine
+from extractor.pointmath import PMath
 import cv2 as cv
 from extractor.forms import Line
 
@@ -59,7 +59,7 @@ class Contour:
             max = 0
             dist = None
             for i in range(start, end):
-                dist = distancePointToLine(contour[start], contour[end], contour[i])
+                dist = PMath.distancePointToLine(contour[start], contour[end], contour[i])
                 if dist > 1 and dist > max:
                     idx = i
                     max = dist

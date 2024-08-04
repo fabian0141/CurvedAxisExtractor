@@ -50,6 +50,12 @@ class Vec2:
     def dot(self, vec2):
         return self.x*vec2.x + self.y*vec2.y
 
+    def cross(self, vec2):
+        return self.x*vec2.y - self.y*vec2.x
+
+    def perp(self):
+        return Vec2([-self.y, self.x])
+
     def convertContour(contours):
         vecContour = []
         contours = contours[1:]

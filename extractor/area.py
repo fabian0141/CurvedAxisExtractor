@@ -1,14 +1,16 @@
 import cv2 as cv
 import numpy as np
 from extractor.vec import Vec2
-from extractor.helper import angle
+from extractor.pointmath import PMath
+from extractor.linewall import LineWall
+from extractor.circlewall import CircleWall
 
 class CircleArea:
     def __init__(self, circle, fullCircle):
         self.circle = circle
         self.columns = []
-        self.curvedWalls = []
-        self.curves = []
+        self.circles = []
+        self.lines = []
     
     def testColumns(self, columns):
         length = len(columns)
@@ -24,29 +26,47 @@ class CircleArea:
         for col in self.columns:
             cv.circle(img, col.toIntArr(), 5, (200, 0, 200), thickness)
 
-    def findCurves(self, img, thickness):
-        distCol = []
-        for col in self.columns:
-            dist = col.dist(self.circle.middle)
-            addNew = True
-            for i in range(len(distCol)):
-                if abs(distCol[i][0] - dist) < 10:
-                    distCol[i] = ((distCol[i][0] + dist) / 2, distCol[i][1] + 1)
-                    addNew = False
-                    break
-                
-            if addNew:
-                distCol.append((dist, 1))
+    def findCurves(self, columns, walls):
 
-        for d, c in distCol:
-            if c > 1:
-                self.curves.append(d)
+        circles = []
+        lines = []
+
+        for col in columns:
+            isLinePart = False
+            for line in lines:
+                #isCurvePart = circle.columnIsPart(col)
+                isLinePart |= line.columnIsPart(col)
+
+            if not isLinePart:
+                if not self.circle.isInside(col):
+                    continue
+
+                middle = self.circle.middle
+                vec = col - middle
+                d = col.dist(middle)
+                d = self.circle.radius / d
+                start = middle + vec * d
+                
+                #circles.append(CircleWall())
+
+
+                lines.append(LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
+
+        for circle in circles:
+            circle.checkForIntersections(walls)
+
+        for line in lines:
+            line.checkForIntersections(walls)
+
+        
+        self.circles = circles
+        self.lines = lines
 
     def drawArea(self, img, thickness = 1):
-        for cur in self.curves:
-            self.circle.drawCircleCurve(img, cur, thickness)
+        for line in self.lines:
+            line.drawWall(img, thickness)
 
-        self.circle.drawSecondLines(img, self.columns, thickness)
+        self.drawColumns(img, thickness)
         self.circle.drawOutline(img, thickness)
 
     def linesIntersection(p1, p2, q1, q2):
@@ -69,7 +89,6 @@ class CircleArea:
             area = CircleArea(circle, fullCircle)
             area.testColumns(columns)
             #area.drawColumns(img, 3)
-            area.findCurves(img, 3)
             areas.append(area)
         return areas
 
@@ -81,7 +100,7 @@ class CircleArea:
             if (c.fullCircle):
                 continue
 
-            ang = angle(c.start, c.end, c.middle)
+            ang = PMath.angle(c.start, c.end, c.middle)
             circleData.append([i, c.start, c.end, c.middle, ang])
 
         circlePairs = []
@@ -95,7 +114,7 @@ class CircleArea:
                     ang = circleData[i][4] + circleData[j][4]
                     if ang < 0:
                         continue
-                    ang -= angle(circleData[i][1], circleData[i][2], circleData[j][2])
+                    ang -= PMath.angle(circleData[i][1], circleData[i][2], circleData[j][2])
                     circlePairs.append((i, j, ang))
 
                 if circleData[j][2] == circleData[i][1]:
@@ -103,7 +122,7 @@ class CircleArea:
                     if ang < 0:
                         continue
 
-                    ang -= angle(circleData[j][1], circleData[j][2], circleData[i][2])
+                    ang -= PMath.angle(circleData[j][1], circleData[j][2], circleData[i][2])
                     circlePairs.append((j, i, ang))
 
         circlePairs = sorted(circlePairs, key=lambda x: x[2])
@@ -142,14 +161,9 @@ class CircleArea:
 
     def getWalls(self):
         walls = [
-            self.circle,
-            (self.start, self.circle.allignMiddle),
-            (self.end, self.circle.allignMiddle)
+            CircleWall(self.circle, LineWall.GUIDE_WALL),
         ]
-
+        if not self.circle.fullCircle:
+            walls.append(LineWall(None, self.circle.start, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
+            walls.append(   LineWall(None, self.circle.end, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
         return walls
-
-
-class PolygonArea:
-    def __init__(self, points):
-        self.points = points

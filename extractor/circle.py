@@ -1,7 +1,7 @@
 import numpy as np
 from extractor.vec import Vec2
 import cv2 as cv
-from extractor.helper import angle
+from extractor.pointmath import PMath
 
 class Circle:
     def __init__(self, middle, radius, start, between, end):
@@ -13,9 +13,9 @@ class Circle:
         if start.dist(end) < 30:
             self.fullCircle = True
 
-        angle1 = Circle.getCircleAngle(start, middle)
-        angle2 = Circle.getCircleAngle(between, middle)
-        angle3 = Circle.getCircleAngle(end, middle)
+        angle1 = PMath.getAxisAngle(middle, start)
+        angle2 = PMath.getAxisAngle(middle, between)
+        angle3 = PMath.getAxisAngle(middle, end)
 
         a = angle1 <= angle2
         b = angle2 <= angle3
@@ -38,12 +38,6 @@ class Circle:
             self.overflow = True
         else:
             self.overflow = False
-
-    def getCircleAngle(p, middle):
-        unitPoint = p - middle
-        unitPoint = unitPoint / abs(unitPoint)
-        angle = np.arctan2(unitPoint.y, unitPoint.x)
-        return angle if angle >= 0 else angle + 2 * np.pi
 
     def getCircle(seg, start, end):
 
@@ -104,7 +98,7 @@ class Circle:
         if self.fullCircle:
             return True
 
-        angle = Circle.getCircleAngle(p, self.middle)
+        angle = PMath.getAxisAngle(self.middle, p)
         angle += (2*np.pi) if self.overflow and self.startAngle > angle else 0
         if self.startAngle < angle < self.endAngle:
             return True
@@ -179,7 +173,7 @@ class Circle:
         if self.allignedMiddle != self.middle:
             return
 
-        ang = angle(self.start, self.end, self.middle) - ang 
+        ang = PMath.angle(self.start, self.end, self.middle) - ang 
         m = (self.start + self.end) / 2
         dir = self.end - self.start
         dir = Vec2([-dir.y, dir.x])

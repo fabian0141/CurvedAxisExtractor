@@ -1,70 +1,45 @@
 from extractor.circle import Circle
-from extractor.helper import quadraticSolver
+from extractor.pointmath import PMath
 import numpy as np
 
 class Wall:
     LINE = 0
     CIRCLE = 1
 
-    def __init__(self, data, type=-1):
-        self.type = type
-        self.line = data
+    HARD_WALL = 0
+    GUIDE_WALL = 1
+    ADDED_WALL = 2
 
+    def checkForIntersections(self, walls):
+        for other in walls:
+            self.checkIntersection(other)
 
-    def getIntersection(self, other):
-        if self.type == Wall.LINE:
-            if other.type == Wall.LINE:
-                return Wall.linesIntersection(self.data, other.data)
-            
-            if other.type == Wall.CIRCLE:
-                return Wall.circleLineIntersection(self.data, other.data)
-            
-        if self.type == Wall.CIRCLE:
-            if other.type == Wall.LINE:
-                return Wall.circleLineIntersection(other.data, self.data)
-            
-            if other.type == Wall.CIRCLE:
-                return Wall.circleIntersection(self.data, other.data)
-
-    def linesIntersection(p, q):
-        v1 = p[0] - p[1]
-        v2 = q[0] - q[1]
-        v3 = p[0] - q[0]
-
-        denom = v1.x * v2.y - v1.y * v2.x
-
-        t = (v3.x * v2.y - v3.y * v2.x) / denom
-        u = -(v1.x * v3.y - v1.y * v3.x) / denom
-        if 0 <= t <= 1 and 0 <= u <= 1:
-            return p[0] - v1*t
-
-        return None
     
-    def circleLineIntersection(l, c):
-        a = l[1] - l[0]
-        b = l[0] - c.allignedMiddle
+    def circleLineIntersection(l1, l2, c):
+        a = l2 - l1
+        b = l1 - c.allignedMiddle
 
         k1 = a.dot(a)
         k2 = 2*a.dot(b)
         k3 = b.dot(b) - c.radius**2
 
-        t1, t2 = quadraticSolver(k1, k2, k3)
+        t1, t2 = PMath.quadraticSolver(k1, k2, k3)
         if t1 is None:
             return None
 
         # need only to check the closest
         # otherwise circle line will intersect
-        if t1 < 0:
-            if t2 > 1:
+        if t1 < 0 or t1 > 1:
+            if t2 < 0 or t2 > 1:
                 return None
             t1 = t2
         elif t1 > t2:
-            t1 = t2
+            if t2 >= 0 or t2 <= 1:
+                t1 = t2
 
-        p1 = a * t1 + l[0]
+        p1 = a * t1 + l1
         if not c.isInside(p1, False):
             return None
-        
         return p1
 
 

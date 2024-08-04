@@ -11,8 +11,8 @@ from extractor.forms import Segment
 from extractor.circle import Circle
 
 from extractor.column import getColumnCenter
-#import svgwrite
-#import contour
+import svgwrite
+import contour
 
 
 def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
@@ -39,6 +39,7 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
 
     columns = getColumnCenter(columnImg)
     circleAreas = []
+    walls = []
 
     for points in contours:
         #findCornersFromContour(points, img)
@@ -55,16 +56,19 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
             cv.circle(img, seg.parts[0].first.toIntArr(), 3, (0, 150, 250), 2)
 
         for seg in segments:
-            circles = findCircles(seg)
+            circles, lin = findCircles(seg)
+            lines.extend(lin)
 
             if len(circles) > 0:
                 circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
 
     CircleArea.checkNeighboringCircleAreas(circleAreas, img)
     
-    walls = []
     for area in circleAreas:
         walls.extend(area.getWalls())
+
+    for area in circleAreas:
+        area.findCurves(columns, walls)
 
 
     for area in circleAreas:
@@ -181,19 +185,19 @@ if __name__ == "__main__":
     #with Pool(16) as p:
     #    p.map(test, nums)
     
-    nums = [87, 94, 114, 177, 403, 476, 661, 673]
+    #nums = [87, 94, 114, 177, 403, 476, 661, 673]
 
-    with Pool(8) as p:
-        p.map(selectedTest, nums)
+    #with Pool(8) as p:
+    #    p.map(selectedTest, nums)
 
-    extractPartsAndWalls("../Dataset/02_sl/ZB_0087_02_sl.png", "../Dataset/03_co/ZB_0087_03_co.png", "../Dataset/07_os/ZB_0087_07_os.png")
+    #extractPartsAndWalls("../Dataset/02_sl/ZB_0087_02_sl.png", "../Dataset/03_co/ZB_0087_03_co.png", "../Dataset/07_os/ZB_0087_07_os.png")
     #extractPartsAndWalls("../Dataset/02_sl/ZB_0403_02_sl.png", "../Dataset/03_co/ZB_0403_03_co.png", "../Dataset/07_os/ZB_0403_07_os.png")
     #extractPartsAndWalls("../Dataset/02_sl/ZB_0476_02_sl.png", "../Dataset/03_co/ZB_0476_03_co.png", "../Dataset/07_os/ZB_0476_07_os.png")
 
 
     # 403 673 
     #extractPartsAndWalls("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
-    #extractPartsAndWalls("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png")
+    #extractPartsAndWalls("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png", "../Dataset/07_os/ZB_0094_07_os.png")
     # extractPartsAndWalls("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
     # extractPartsAndWalls("../Dataset/Selected/ZB_0177_02_sl.png")
     #extractPartsAndWalls("../Dataset/Selected/ZB_0403_02_sl.png", "../Dataset/Selected/ZB_0403_03_co.png")
@@ -202,7 +206,7 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
     #testContour("../Dataset/Selected/ZB_0673_07_os.png")
-    #testContour("../Dataset/07_os/ZB_0087_07_os.png")
+    testContour("../Dataset/07_os/ZB_0087_07_os.png")
     #testContour("../Dataset/07_os/ZB_0476_07_os.png")
 
     #arr1 = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float64)

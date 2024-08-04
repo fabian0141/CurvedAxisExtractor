@@ -1,7 +1,7 @@
 import numpy as np
 from extractor.vec import Vec2
 import cv2 as cv
-from extractor.helper import angle
+from extractor.pointmath import PMath
 
 class Segment:
     def __init__(self):
