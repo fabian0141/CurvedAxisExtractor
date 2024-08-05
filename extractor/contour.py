@@ -36,8 +36,6 @@ class Contour:
             if p[2] < 0:
                 contours.append(Contour(vecContour=vecContour))
                 vecContour = []
-                print(contour[i-2], i-2)
-                print(contour[i], i)
                 continue
 
             vecContour.append(Vec2(p[:2]))

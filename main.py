@@ -145,13 +145,13 @@ def testContour(imgFile):
     dwg = svgwrite.Drawing('test.svg', size = img.shape)
     
     points = contour.testContour(img)
-    group = dwg.g(id='content', transform='scale(3) translate(-1720, -1700)')
+    group = dwg.g(id='content', transform='scale(5) translate(-2500, -1700)')
     dwg.add(group)
 
-    #for point in points:
+    #for point in points[:5000]:
     #    c = int(point[2])
     #    col = "rgb({},{},{})".format(255,c,255)
-    #    group.add(dwg.circle(center=point[:2], r=1.0, fill=col))
+    #    group.add(dwg.circle(center=point[:2], r=0.5, fill=col))
 
     points = contour.getContour(img)
     print(len(points))
