@@ -143,9 +143,13 @@ def testContour(imgFile):
 
     img = cv.cvtColor(imgCol, cv.COLOR_BGR2GRAY)
     dwg = svgwrite.Drawing('test.svg', size = img.shape)
-    
+    dwg.viewbox(minx=0, miny=0, width=img.shape[0], height=img.shape[1])
+
+    dwg.add(dwg.image(imgFile, insert=(0, 0), size=img.shape))
+
+
     points = contour.testContour(img)
-    group = dwg.g(id='content', transform='scale(5) translate(-2500, -1700)')
+    group = dwg.g(id='content')
     dwg.add(group)
 
     #for point in points[:5000]:
@@ -168,8 +172,128 @@ def testContour(imgFile):
         col = "rgb({},{},{})".format(c,c,c)
 
         counter = (counter+30)%256
-        group.add(dwg.circle(center=point[:2], r=0.5, fill=col))
+        group.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+        
 
+    zoom_script = """
+        var svgElement = document.documentElement;
+        var zoomLevel = 1;
+        var viewBox = [0, 0, 5905, 5905];
+
+        svgElement.addEventListener('wheel', function(event) {
+            event.preventDefault();
+
+            var mouseX = event.clientX;
+            var mouseY = event.clientY;
+            var svgRect = svgElement.getBoundingClientRect();
+            var svgX = mouseX - svgRect.left;
+            var svgY = mouseY - svgRect.top;
+
+            var viewBoxX = viewBox[0];
+            var viewBoxY = viewBox[1];
+            var viewBoxWidth = viewBox[2];
+            var viewBoxHeight = viewBox[3];
+
+            var scale = (event.deltaY > 0) ? 1.1 : 0.9;
+
+            var newViewBoxWidth = viewBoxWidth * scale;
+            var newViewBoxHeight = viewBoxHeight * scale;
+
+            var dx = (svgX / svgRect.width) * (newViewBoxWidth - viewBoxWidth);
+            var dy = (svgY / svgRect.height) * (newViewBoxHeight - viewBoxHeight);
+
+            viewBox[0] = viewBoxX - dx;
+            viewBox[1] = viewBoxY - dy;
+            viewBox[2] = newViewBoxWidth;
+            viewBox[3] = newViewBoxHeight;
+
+            svgElement.setAttribute('viewBox', viewBox.join(' '));
+        }, { passive: false });
+    """
+    dwg.add(dwg.script(content=zoom_script, type="text/ecmascript"))
+
+    # Save the SVG file
+    dwg.save()
+
+def extractPartsAndWalls2(imgFile):
+    imgCol = cv.imread(imgFile)
+    if imgCol is None:
+        return
+
+    img = cv.cvtColor(imgCol, cv.COLOR_BGR2GRAY)
+    dwg = svgwrite.Drawing('test.svg', size = img.shape)
+    dwg.viewbox(minx=0, miny=0, width=img.shape[0], height=img.shape[1])
+
+    dwg.add(dwg.image(imgFile, insert=(0, 0), size=img.shape))
+
+
+    points = contour.testContour(img)
+    group = dwg.g(id='content')
+    dwg.add(group)
+
+    #for point in points[:5000]:
+    #    c = int(point[2])
+    #    col = "rgb({},{},{})".format(255,c,255)
+    #    group.add(dwg.circle(center=point[:2], r=0.5, fill=col))
+
+    points = contour.getContour(img)
+    print(len(points))
+    for point in points:
+        if point[2] < 0:
+            continue
+
+        group.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+
+    contours = Contour.convertContour(points)
+    for points in contours:
+        miniCons = Contour.getContourParts(points, img)
+        for con in miniCons:
+            group.add(dwg.circle(center=con.first.toArr(), r=2, fill="rgb(150,150,150)"))
+        
+        lines = findLines(miniCons)
+        for i in range(-1, len(lines)-1):
+            group.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(0,0,200)"))
+
+        segments = splitIntoSegments(img, lines)
+        for seg in segments:
+            group.add(dwg.circle(center=seg.parts[0].first.toArr(), r=4, fill="rgb(150,0,0)"))
+
+    zoom_script = """
+        var svgElement = document.documentElement;
+        var zoomLevel = 1;
+        var viewBox = [0, 0, 5905, 5905];
+
+        svgElement.addEventListener('wheel', function(event) {
+            event.preventDefault();
+
+            var mouseX = event.clientX;
+            var mouseY = event.clientY;
+            var svgRect = svgElement.getBoundingClientRect();
+            var svgX = mouseX - svgRect.left;
+            var svgY = mouseY - svgRect.top;
+
+            var viewBoxX = viewBox[0];
+            var viewBoxY = viewBox[1];
+            var viewBoxWidth = viewBox[2];
+            var viewBoxHeight = viewBox[3];
+
+            var scale = (event.deltaY > 0) ? 1.1 : 0.9;
+
+            var newViewBoxWidth = viewBoxWidth * scale;
+            var newViewBoxHeight = viewBoxHeight * scale;
+
+            var dx = (svgX / svgRect.width) * (newViewBoxWidth - viewBoxWidth);
+            var dy = (svgY / svgRect.height) * (newViewBoxHeight - viewBoxHeight);
+
+            viewBox[0] = viewBoxX - dx;
+            viewBox[1] = viewBoxY - dy;
+            viewBox[2] = newViewBoxWidth;
+            viewBox[3] = newViewBoxHeight;
+
+            svgElement.setAttribute('viewBox', viewBox.join(' '));
+        }, { passive: false });
+    """
+    dwg.add(dwg.script(content=zoom_script, type="text/ecmascript"))
 
     # Save the SVG file
     dwg.save()
@@ -206,7 +330,7 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
     #testContour("../Dataset/Selected/ZB_0673_07_os.png")
-    testContour("../Dataset/07_os/ZB_0087_07_os.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png")
     #testContour("../Dataset/07_os/ZB_0476_07_os.png")
 
     #arr1 = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float64)

@@ -38,7 +38,7 @@ class Contour:
                 vecContour = []
                 continue
 
-            vecContour.append(Vec2(p[:2]))
+            vecContour.append(Vec2(p[:2] + [0.5, 0.5]))
 
         return contours
                 
@@ -83,10 +83,6 @@ class Contour:
 
         # TODO: test if also check for corners here
         conParts[-1].points.extend(contour[start:])
-
-        for con in conParts:
-            cv.circle(img, con.first.toIntArr(), 1, (255, 0, 0), 1)
-            #cv.line(img, con.first.toIntArr(), con.last.toIntArr(), (150,150,150), 1)
 
         return conParts
 
