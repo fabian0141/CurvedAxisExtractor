@@ -124,9 +124,9 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     printf("Works %d %d\n", bu.length, i);
                     continue;
                 }
-
-                if (dist(bigPoint, p) < 2.5) {
-                    if (bigPoint.val < p.val) {
+                double d = dist(bigPoint, p);
+                if (d < 2.5) {
+                    if (d < 0.5 || bigPoint.val < p.val) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
                         (*counter)--;

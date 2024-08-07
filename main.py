@@ -6,9 +6,10 @@ from multiprocessing import Pool
 from extractor.vec import Vec2
 from extractor.area import CircleArea
 from extractor.contour import Contour
-from extractor.formfinder import findLines, splitIntoSegments, findCircles
+from extractor.formfinder import findLines, splitIntoSegments, findCircles, findCorners
 from extractor.forms import Segment
 from extractor.circle import Circle
+from extractor.pointmath import PMath
 
 from extractor.column import getColumnCenter
 import svgwrite
@@ -96,24 +97,10 @@ def circleLinesIntersect(c1, c2):
     ]
 
     for test in tests:
-        if linesIntersection(test[0], c1.allignedMiddle, test[1], c2.allignedMiddle) is not None:
+        if PMath.segmentsIntersection(test[0], c1.allignedMiddle, test[1], c2.allignedMiddle) is not None:
             return True
         
     return False
-
-def linesIntersection(p1, p2, q1, q2):
-    v1 = p1 - p2
-    v2 = q1 - q2
-    v3 = p1 - q1
-
-    denom = v1.x * v2.y - v1.y * v2.x
-
-    t = (v3.x * v2.y - v3.y * v2.x) / denom
-    u = -(v1.x * v3.y - v1.y * v3.x) / denom
-    if 0 <= t <= 1 and 0 <= u <= 1:
-        return p1 - v1*t
-
-    return None
 
 def test(num):
     print(num)
@@ -149,13 +136,11 @@ def testContour(imgFile):
 
 
     points = contour.testContour(img)
-    group = dwg.g(id='content')
-    dwg.add(group)
 
     #for point in points[:5000]:
     #    c = int(point[2])
     #    col = "rgb({},{},{})".format(255,c,255)
-    #    group.add(dwg.circle(center=point[:2], r=0.5, fill=col))
+    #    dwg.add(dwg.circle(center=point[:2], r=0.5, fill=col))
 
     points = contour.getContour(img)
     print(len(points))
@@ -172,7 +157,7 @@ def testContour(imgFile):
         col = "rgb({},{},{})".format(c,c,c)
 
         counter = (counter+30)%256
-        group.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+        dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
         
 
     zoom_script = """
@@ -215,7 +200,7 @@ def testContour(imgFile):
     # Save the SVG file
     dwg.save()
 
-def extractPartsAndWalls2(imgFile):
+def extractPartsAndWalls2(imgFile, columnImg):
     imgCol = cv.imread(imgFile)
     if imgCol is None:
         return
@@ -228,35 +213,61 @@ def extractPartsAndWalls2(imgFile):
 
 
     points = contour.testContour(img)
-    group = dwg.g(id='content')
-    dwg.add(group)
 
     #for point in points[:5000]:
     #    c = int(point[2])
     #    col = "rgb({},{},{})".format(255,c,255)
-    #    group.add(dwg.circle(center=point[:2], r=0.5, fill=col))
+    #    dwg.add(dwg.circle(center=point[:2], r=0.5, fill=col))
 
     points = contour.getContour(img)
     print(len(points))
-    for point in points:
-        if point[2] < 0:
-            continue
+    #for point in points:
+    #    if point[2] < 0:
+    #        continue
 
-        group.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+    #    dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+
+    columns = getColumnCenter(columnImg)
+    circleAreas = []
+    walls = []
 
     contours = Contour.convertContour(points)
     for points in contours:
         miniCons = Contour.getContourParts(points, img)
-        for con in miniCons:
-            group.add(dwg.circle(center=con.first.toArr(), r=2, fill="rgb(150,150,150)"))
+        #for con in miniCons:
+        #    dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
         
-        lines = findLines(miniCons)
+        lines = findCorners(miniCons)
         for i in range(-1, len(lines)-1):
-            group.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(0,0,200)"))
+            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
 
         segments = splitIntoSegments(img, lines)
         for seg in segments:
-            group.add(dwg.circle(center=seg.parts[0].first.toArr(), r=4, fill="rgb(150,0,0)"))
+            dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
+
+        for seg in segments:
+            circles, lin = findCircles(seg)
+            lines.extend(lin)
+            for c in circles:
+                c.drawOutline(dwg, 1)
+
+            if len(circles) > 0:
+                circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
+
+    CircleArea.checkNeighboringCircleAreas(circleAreas, img)
+    
+    for area in circleAreas:
+        walls.extend(area.getWalls())
+
+    for area in circleAreas:
+        area.findCurves(columns, walls)
+
+
+    for area in circleAreas:
+        area.drawArea(dwg, 3)
+
+    for col in columns:
+        dwg.add(dwg.circle(center=col.toArr(), r=5, fill="rgb(150,0,0)"))
 
     zoom_script = """
         var svgElement = document.documentElement;
@@ -330,7 +341,7 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
     #testContour("../Dataset/Selected/ZB_0673_07_os.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
     #testContour("../Dataset/07_os/ZB_0476_07_os.png")
 
     #arr1 = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float64)

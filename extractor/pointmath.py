@@ -37,10 +37,10 @@ class PMath:
     def getAxisAngle(p1, p2):
         unitPoint = p2 - p1
         unitPoint = unitPoint / abs(unitPoint)
-        angle = np.arctan2(unitPoint.y, unitPoint.x)
+        angle = -np.arctan2(unitPoint.y, unitPoint.x)
         return angle if angle >= 0 else angle + 2 * np.pi
     
-    def linesIntersection(p1, p2, q1, q2):
+    def segmentsIntersection(p1, p2, q1, q2):
         v1 = p1 - p2
         v2 = q1 - q2
         v3 = p1 - q1
@@ -53,3 +53,15 @@ class PMath:
             return p1 - v1*t
 
         return None
+    
+    def linesIntersection(p1, p2, q1, q2):
+        v1 = p1 - p2
+        v2 = q1 - q2
+        v3 = p1 - q1
+
+        denom = v1.x * v2.y - v1.y * v2.x
+        if denom == 0: 
+            return None
+
+        t = (v3.x * v2.y - v3.y * v2.x) / denom
+        return p1 - v1*t

@@ -32,7 +32,6 @@ def findLines(parts):
         lines[0] = lines[-1] + lines[0]
         lines.pop(-1)
   
-    leng = len(lines)
     # remove rounded corners
     # for idx in range(leng):
     #     i1 = idx % leng
@@ -45,6 +44,63 @@ def findLines(parts):
     #         Line.splitShare(intersection); lines[i2] = (intersection, (lines[i2][1] + lines[j1][1]) // 2)
     #         lines.pop(j1)
     #         leng -= 1
+
+    leng = len(lines)
+    # TODO: Need to check if start is valid
+    start = -1
+    improveCorner = False
+    i = 0
+    while i < leng:
+        if len(lines[i].points) < 4:
+            lines.pop(i)
+            improveCorner = True
+            leng -= 1
+            continue
+
+        if improveCorner:
+            intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[i].first, lines[i].last)
+            lines[start].push(intersection, Line.END)
+            lines[i].push(intersection, Line.START)
+            improveCorner = False
+
+        start = i
+        i += 1
+
+    if improveCorner:
+        intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[0].first, lines[0].last)
+        lines[start].push(intersection, Line.END)
+        lines[0].push(intersection, Line.START)
+
+    return lines
+
+
+def findCorners(lines):
+
+    leng = len(lines)
+    # TODO: Need to check if start is valid
+    start = -1
+    improveCorner = False
+    i = 0
+    while i < leng:
+        if len(lines[i].points) < 4:
+            lines.pop(i)
+            improveCorner = True
+            leng -= 1
+            continue
+
+        if improveCorner:
+            intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[i].first, lines[i].last)
+            lines[start].push(intersection, Line.END)
+            lines[i].push(intersection, Line.START)
+            improveCorner = False
+
+        start = i
+        i += 1
+
+    if improveCorner:
+        intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[0].first, lines[0].last)
+        lines[start].push(intersection, Line.END)
+        lines[0].push(intersection, Line.START)
 
     return lines
 

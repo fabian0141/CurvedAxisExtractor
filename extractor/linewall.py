@@ -39,8 +39,8 @@ class LineWall(Wall):
 
     def checkIntersection(self, other):
         if other.type == Wall.LINE:
-            point1 = PMath.linesIntersection(self.minP1, self.maxP1, other.maxP1, other.maxP2)
-            point2 = PMath.linesIntersection(self.minP2, self.maxP2, other.maxP1, other.maxP2)
+            point1 = PMath.segmentsIntersection(self.minP1, self.maxP1, other.maxP1, other.maxP2)
+            point2 = PMath.segmentsIntersection(self.minP2, self.maxP2, other.maxP1, other.maxP2)
 
         elif other.type == Wall.CIRCLE:
             point1 = Wall.circleLineIntersection(self.minP2, self.maxP1, other.circle)
@@ -52,5 +52,5 @@ class LineWall(Wall):
         if point2 is not None:
             self.maxP2 = point2
 
-    def drawWall(self, img, thickness):
-        cv.line(img, self.maxP1.toIntArr(), self.maxP2.toIntArr(), (0, 150, 200), thickness)
+    def drawWall(self, dwg, thickness):
+        dwg.add(dwg.line(start=self.maxP1.toArr(), end=self.maxP2.toArr(), stroke="rgb(200,150,0)"))

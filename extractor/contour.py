@@ -50,39 +50,29 @@ class Contour:
         return len(self.cons)
     
     def getContourParts(contour, img):
-
-        def checkForCorner():
-            idx = min(start+10, len(contour)-1)
-            end = min(start + 20, len(contour)-1)
-            max = 0
-            dist = None
-            for i in range(start, end):
-                dist = PMath.distancePointToLine(contour[start], contour[end], contour[i])
-                if dist > 1 and dist > max:
-                    idx = i
-                    max = dist
-
-            if max < 1 and end < start+20:
-                idx = end
-            return idx
         
         conParts = []
         start = 0
+        last = PMath.getAxisAngle(contour[0], contour[1])
+        angle = 0
 
-        # find first corner and shift previous part to end
-        idx = checkForCorner()
-        contour = contour[idx:] + contour[:idx]
-        contour.append(contour[0])
-        start = 0
-        last = len(contour) - 10
+        for i in range(1, len(contour)-1):
+            next = PMath.getAxisAngle(contour[i], contour[i+1])
+            angle += next - last
+            last = next
+            if abs(angle) > 0.05:
+                conParts.append(Line(contour[start:i+1]))
+                start = i
+                angle = 0
 
-        while start < len(contour)-1:
-            idx = checkForCorner()
-            conParts.append(Line(contour[start:idx+1]))
-            start = idx
+        #next = PMath.getAxisAngle(contour[i], contour[i+1])
+        #angle += next - last
+        #last = next
+        #    if abs(angle) > 0.05:
+        conParts.append(Line(contour[start:] + contour[0:1]))
 
         # TODO: test if also check for corners here
-        conParts[-1].points.extend(contour[start:])
+        #conParts[-1].points.extend(contour[start:])
 
         return conParts
 

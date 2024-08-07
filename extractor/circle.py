@@ -1,7 +1,7 @@
 import numpy as np
 from extractor.vec import Vec2
-import cv2 as cv
 from extractor.pointmath import PMath
+import svgwrite
 
 class Circle:
     def __init__(self, middle, radius, start, between, end):
@@ -104,37 +104,37 @@ class Circle:
             return True
         return False
     
-    def drawOutline(self, img, thickness=1):
-        color = (0, 250, 150)
+    def drawOutline(self, dwg, thickness=1):
+        color = "rgb(100,200,0)"
         if self.fullCircle:
-            cv.circle(img, self.middle.toIntArr(), int(self.radius), color, thickness)
+            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color))
             return
 
-        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
-        endPoint = Vec2([np.cos(self.endAngle), np.sin(self.endAngle)]) * self.radius + self.middle
+        startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
+        endPoint = Vec2([np.cos(self.endAngle), -np.sin(self.endAngle)]) * self.radius + self.middle
 
-        cv.line(img, self.allignedMiddle.toIntArr(), startPoint.toIntArr(), color, thickness)
-        cv.line(img, self.allignedMiddle.toIntArr(), endPoint.toIntArr(), color, thickness)
+        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=startPoint.toArr(), stroke=color))
+        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=endPoint.toArr(), stroke=color))
 
-        self.drawCircleCurve(img, self.radius, thickness, color)
+        self.drawCircleCurve(dwg, self.radius, thickness, color)
 
-    def drawCircleCurve(self, img, radius, thickness=1, color=None):
+    def drawCircleCurve(self, dwg, radius, thickness=1, color=None):
         if color is None:
-            color = (200, 0, 200)
+            color = "rgb(200,0,200)"
 
         if self.fullCircle:
-            cv.circle(img, self.middle.toIntArr(), int(radius), color, thickness)
+            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color))
             return
 
-        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
+        startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
         
         angleRange = self.endAngle - self.startAngle if self.startAngle < self.endAngle else 2 * np.pi - self.startAngle + self.endAngle
         rangeParts = int(angleRange * radius / 10)
         for i in range(rangeParts):
             angle = self.startAngle + angleRange * i / rangeParts
-            point = Vec2([np.cos(angle), np.sin(angle)]) * radius + self.middle
+            point = Vec2([np.cos(angle), -np.sin(angle)]) * radius + self.middle
 
-            cv.line(img, startPoint.toIntArr(), point.toIntArr(), color, thickness)
+            dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color))
             startPoint = point
 
     
@@ -150,24 +150,12 @@ class Circle:
             if middle == alMiddle:
                 end = middle
             else:
-                end = Circle.linesIntersection(self.start, alMiddle, start, middle)
+                end = PMath.segmentsIntersection(self.start, alMiddle, start, middle)
                 if end is None:
-                    end = Circle.linesIntersection(self.end, alMiddle, start, middle)
+                    end = PMath.segmentsIntersection(self.end, alMiddle, start, middle)
 
             cv.line(img, end.toIntArr(), start.toIntArr(), (200, 0, 200), thickness)
 
-    def linesIntersection(p1, p2, q1, q2):
-        v1 = p1 - p2
-        v2 = q1 - q2
-        v3 = p1 - q1
-        denom = v1.x * v2.y - v1.y * v2.x
-
-        t = (v3.x * v2.y - v3.y * v2.x) / denom
-        u = -(v1.x * v3.y - v1.y * v3.x) / denom
-        if 0 <= t <= 1 and 0 <= u <= 1:
-            return p1 - v1*t
-
-        return None
 
     def allignMiddle(self, ang):
         if self.allignedMiddle != self.middle:

@@ -32,6 +32,8 @@ class Segment:
         return self.parts[i1].first.dist(self.parts[i2-1].last)
 
 class Line:
+    START = 0
+    END = 1
     def __init__(self, points):
         self.points = points
         self.first = points[0]
@@ -47,6 +49,16 @@ class Line:
         self.last = self.points[-1]
         return self
     
+
+    def push(self, point, pos):
+        if pos == Line.START:
+            self.points = [point] + self.points
+            self.first = point
+        else:
+            self.points.append(point)
+            self.last = point
+        return self
+
     #def splitShare(intersection, before, between, after):
         
     #    before +

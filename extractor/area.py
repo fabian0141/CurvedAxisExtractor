@@ -22,9 +22,10 @@ class CircleArea:
             i += 1
 
 
-    def drawColumns(self, img, thickness=1):
+    def drawColumns(self, dwg, thickness=1):
         for col in self.columns:
-            cv.circle(img, col.toIntArr(), 5, (200, 0, 200), thickness)
+            dwg.add(dwg.circle(center=col.toArr(), r=thickness, fill="rgb(200,0,200)"))
+
 
     def findCurves(self, columns, walls):
 
@@ -62,25 +63,12 @@ class CircleArea:
         self.circles = circles
         self.lines = lines
 
-    def drawArea(self, img, thickness = 1):
+    def drawArea(self, dwg, thickness = 1):
         for line in self.lines:
-            line.drawWall(img, thickness)
+            line.drawWall(dwg, thickness)
 
-        self.drawColumns(img, thickness)
-        self.circle.drawOutline(img, thickness)
-
-    def linesIntersection(p1, p2, q1, q2):
-        v1 = p1 - p2
-        v2 = q1 - q2
-        v3 = p1 - q1
-        denom = v1.x * v2.y - v1.y * v2.x
-
-        t = (v3.x * v2.y - v3.y * v2.x) / denom
-        u = -(v1.x * v3.y - v1.y * v3.x) / denom
-        if 0 <= t <= 1 and 0 <= u <= 1:
-            return p1 - v1*t
-
-        return None
+        self.drawColumns(dwg, thickness)
+        self.circle.drawOutline(dwg, thickness)
 
     def getCirclesAreas(img, columns, circles, fullCircle = False):
         areas = []
