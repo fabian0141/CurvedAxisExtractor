@@ -211,14 +211,6 @@ def extractPartsAndWalls2(imgFile, columnImg):
 
     dwg.add(dwg.image(imgFile, insert=(0, 0), size=img.shape))
 
-
-    points = contour.testContour(img)
-
-    #for point in points[:5000]:
-    #    c = int(point[2])
-    #    col = "rgb({},{},{})".format(255,c,255)
-    #    dwg.add(dwg.circle(center=point[:2], r=0.5, fill=col))
-
     points = contour.getContour(img)
     print(len(points))
     #for point in points:

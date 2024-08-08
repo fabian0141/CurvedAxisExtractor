@@ -54,6 +54,7 @@ void quickSort(PointRef arr[], int low, int high) {
 //python setup.py build && python setup.py install
 // TODO: sort points by value and check then for biggest value
 // Function to add two numbers
+// For Mac: export ARCHFLAGS="-arch x86_64"  
 static PyObject* add(PyObject* self, PyObject* args) {
     PyArrayObject *arr1, *arr2, *result;
     if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &arr1, &PyArray_Type, &arr2)) {

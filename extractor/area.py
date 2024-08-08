@@ -34,9 +34,13 @@ class CircleArea:
 
         for col in columns:
             isLinePart = False
+            isCirclePart = False
+
             for line in lines:
-                #isCurvePart = circle.columnIsPart(col)
                 isLinePart |= line.columnIsPart(col)
+
+            for circle in circles:
+                isCirclePart |= circle.columnIsPart(col)
 
             if not isLinePart:
                 if not self.circle.isInside(col):
@@ -49,9 +53,20 @@ class CircleArea:
                 start = middle + vec * d
                 
                 #circles.append(CircleWall())
-
-
                 lines.append(LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
+
+            if not isCirclePart:
+                if not self.circle.isInside(col):
+                    continue
+
+                middle = self.circle.middle
+                vec = col - middle
+                d = col.dist(middle)
+                d = self.circle.radius / d
+                start = middle + vec * d
+                
+                #circles.append(CircleWall())
+                circles.append(CircleWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
 
         for circle in circles:
             circle.checkForIntersections(walls)
