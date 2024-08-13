@@ -17,11 +17,12 @@ class Circle:
         angle2 = PMath.getAxisAngle(middle, between)
         angle3 = PMath.getAxisAngle(middle, end)
 
-        a = angle1 <= angle2
-        b = angle2 <= angle3
-        c = angle1 <= angle3
+        a = int(angle1 <= angle2)
+        b = int(angle3 < angle2)
+        c = int(angle1 <= angle3)
+        d = (a + b + c) % 2
 
-        if (a + b + c) % 2 == 1:
+        if (a + b + c) % 2 == 0:
             self.startAngle = angle1
             self.endAngle = angle3
             self.start = start
@@ -34,7 +35,6 @@ class Circle:
             self.end = start
 
         if self.endAngle < self.startAngle:
-            self.endAngle += 2 * np.pi
             self.overflow = True
         else:
             self.overflow = False
@@ -90,24 +90,23 @@ class Circle:
             
         return True
 
-    def isInside(self, p, checkRadius=True):
+    def isInside(self, p):
         dist = p.dist(self.middle)
-        if checkRadius and dist > self.radius:
+        if dist > self.radius:
             return False    
 
         if self.fullCircle:
             return True
 
-        angle = PMath.getAxisAngle(self.middle, p)
-        angle += (2*np.pi) if self.overflow and self.startAngle > angle else 0
-        if self.startAngle < angle < self.endAngle:
+        ang = PMath.getAxisAngle(self.middle, p)
+        if (int(self.startAngle < ang) + int(self.endAngle < ang) + int(self.startAngle < self.endAngle)) % 2 == 0:
             return True
         return False
     
     def drawOutline(self, dwg, thickness=1):
         color = "rgb(100,200,0)"
         if self.fullCircle:
-            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color))
+            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
             return
 
         startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
@@ -123,14 +122,14 @@ class Circle:
             color = "rgb(200,0,200)"
 
         if self.fullCircle:
-            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color))
+            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
             return
 
         startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
         
         angleRange = self.endAngle - self.startAngle if self.startAngle < self.endAngle else 2 * np.pi - self.startAngle + self.endAngle
         rangeParts = int(angleRange * radius / 10)
-        for i in range(rangeParts):
+        for i in range(rangeParts+1):
             angle = self.startAngle + angleRange * i / rangeParts
             point = Vec2([np.cos(angle), -np.sin(angle)]) * radius + self.middle
 
@@ -166,5 +165,5 @@ class Circle:
         dir = self.end - self.start
         dir = Vec2([-dir.y, dir.x])
         h = np.tan(ang) / 2
-        middle = m + dir*h
+        middle = m - dir*h
         self.allignedMiddle = middle

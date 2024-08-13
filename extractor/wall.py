@@ -15,13 +15,13 @@ class Wall:
             self.checkIntersection(other)
 
     
-    def circleLineIntersection(l1, l2, c):
+    def circleLineIntersection(l1, l2, middle, radius, fullCircle, start, end):
         a = l2 - l1
-        b = l1 - c.allignedMiddle
+        b = l1 - middle
 
         k1 = a.dot(a)
         k2 = 2*a.dot(b)
-        k3 = b.dot(b) - c.radius**2
+        k3 = b.dot(b) - radius**2
 
         t1, t2 = PMath.quadraticSolver(k1, k2, k3)
         if t1 is None:
@@ -34,13 +34,24 @@ class Wall:
                 return None
             t1 = t2
         elif t1 > t2:
-            if t2 >= 0 or t2 <= 1:
+            if t2 >= 0 and t2 <= 1:
                 t1 = t2
 
         p1 = a * t1 + l1
-        if not c.isInside(p1, False):
+        if not Wall.isInside(middle, fullCircle, start, end, p1):
             return None
         return p1
+    
+
+    def isInside(middle, fullCircle, start, end, p):
+        if fullCircle:
+            return True
+
+        angle = PMath.getAxisAngle(middle, p)
+        angle += (2*np.pi) if start > end and start > angle else 0
+        if start < angle < end:
+            return True
+        return False
 
 
 

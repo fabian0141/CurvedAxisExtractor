@@ -31,6 +31,7 @@ class CircleArea:
 
         circles = []
         lines = []
+        columns2 = []
 
         for col in columns:
             isLinePart = False
@@ -43,7 +44,8 @@ class CircleArea:
                 isCirclePart |= circle.columnIsPart(col)
 
             if not isLinePart:
-                if not self.circle.isInside(col):
+                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col):
+                    columns2.append(col)
                     continue
 
                 middle = self.circle.middle
@@ -56,23 +58,28 @@ class CircleArea:
                 lines.append(LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
 
             if not isCirclePart:
-                if not self.circle.isInside(col):
+                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col):
                     continue
 
-                middle = self.circle.middle
-                vec = col - middle
-                d = col.dist(middle)
-                d = self.circle.radius / d
-                start = middle + vec * d
+                circles.append(CircleWall(self.circle.middle, None, self.circle.fullCircle, col, 
+                                          self.circle.startAngle, self.circle.endAngle, LineWall.ADDED_WALL))
                 
-                #circles.append(CircleWall())
-                circles.append(CircleWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
 
-        for circle in circles:
-            circle.checkForIntersections(walls)
+        #some problems with solid walls intersecting
+        # for col in columns2:
+        #     for line in lines:
+        #         line.columnIsPart(col)
+
+        #     for circle in circles:
+        #         circle.columnIsPart(col)
+
+
 
         for line in lines:
             line.checkForIntersections(walls)
+
+        for circle in circles:
+            circle.checkForIntersections(walls)
 
         
         self.circles = circles
@@ -81,6 +88,9 @@ class CircleArea:
     def drawArea(self, dwg, thickness = 1):
         for line in self.lines:
             line.drawWall(dwg, thickness)
+
+        for circle in self.circles:
+            circle.drawWall(dwg, thickness)
 
         self.drawColumns(dwg, thickness)
         self.circle.drawOutline(dwg, thickness)
@@ -164,9 +174,10 @@ class CircleArea:
 
     def getWalls(self):
         walls = [
-            CircleWall(self.circle, LineWall.GUIDE_WALL),
+            CircleWall(self.circle.middle, self.circle.radius, self.circle.fullCircle, 
+                       None, self.circle.startAngle, self.circle.endAngle, LineWall.GUIDE_WALL),
         ]
         if not self.circle.fullCircle:
-            walls.append(LineWall(None, self.circle.start, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
-            walls.append(   LineWall(None, self.circle.end, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
+            walls.append(LineWall(None, self.circle.start + (self.circle.start - self.circle.allignedMiddle)*5, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
+            walls.append(LineWall(None, self.circle.end + (self.circle.end - self.circle.allignedMiddle)*5, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
         return walls

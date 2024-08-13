@@ -46,7 +46,7 @@ def findLines(parts):
     #         leng -= 1
 
     leng = len(lines)
-    # TODO: Need to check if start is valid
+    # TODO: Need to check if start is valid (img 114)
     start = -1
     improveCorner = False
     i = 0
@@ -73,7 +73,7 @@ def findLines(parts):
 
     return lines
 
-
+#TODO: still some problems
 def findCorners(lines):
 
     leng = len(lines)
@@ -82,7 +82,16 @@ def findCorners(lines):
     improveCorner = False
     i = 0
     while i < leng:
+        if len(lines[(i-1)%leng].points) < 5 or len(lines[(i+1)%leng].points) < 5:
+            if PMath.angle(lines[(i-1)%leng].first, lines[i].first, lines[i].last) < DEG150:
+                print("cornerFound", lines[i].first.x, lines[i].first.y, PMath.angle(lines[(i-1)%leng].first, lines[i].first, lines[i].last))
+                start = i
+                i += 1
+                continue
+
         if len(lines[i].points) < 4:
+            #print("delete line", lines[i].first.x, lines[i].first.y)
+
             lines.pop(i)
             improveCorner = True
             leng -= 1
@@ -90,6 +99,8 @@ def findCorners(lines):
 
         if improveCorner:
             intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[i].first, lines[i].last)
+            if intersection is None:
+                print("HOLY SHIT")
             lines[start].push(intersection, Line.END)
             lines[i].push(intersection, Line.START)
             improveCorner = False

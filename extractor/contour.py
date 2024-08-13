@@ -2,6 +2,7 @@ from extractor.vec import Vec2
 from extractor.pointmath import PMath
 import cv2 as cv
 from extractor.forms import Line
+import numpy as np
 
 
 class Contour:
@@ -56,11 +57,13 @@ class Contour:
         last = PMath.getAxisAngle(contour[0], contour[1])
         angle = 0
 
+        # TODO: better way to find parts
         for i in range(1, len(contour)-1):
             next = PMath.getAxisAngle(contour[i], contour[i+1])
-            angle += next - last
+            a = (next - last) % (2*np.pi)
+            angle += min(a, 2 * np.pi - a)
             last = next
-            if abs(angle) > 0.05:
+            if abs(angle) > 0.2:
                 conParts.append(Line(contour[start:i+1]))
                 start = i
                 angle = 0

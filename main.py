@@ -111,15 +111,17 @@ def test(num):
 
     extractPartsAndWalls(fn_slab, "testOutput/" + str(num) + ".png")
 
-def selectedTest(num):
-    print(num)
+def selectedTest(num, svg=True):
     in_path = "../Dataset/"
     prefix = 'ZB_' if num > 999 else 'ZB_0' if num > 99 else 'ZB_00' if num > 9 else 'ZB_000'
     fn_slab = in_path + "02_sl/" + prefix + str(num) + '_02_sl.png'
     fn_column = in_path + "03_co/" + prefix + str(num) + '_03_co.png'
     fn_layout = in_path + "07_os/" + prefix + str(num) + '_07_os.png'
 
-    extractPartsAndWalls(fn_slab, fn_column, fn_layout, "selectedOutput/" + str(num) + ".png")
+    if svg:
+        extractPartsAndWalls2(fn_layout, fn_column, "selectedOutput/" + str(num) + ".svg")
+    else:
+        extractPartsAndWalls(fn_slab, fn_column, fn_layout, "selectedOutput/" + str(num) + ".png")
 
     print("Finshed: " + str(num))
 
@@ -200,66 +202,71 @@ def testContour(imgFile):
     # Save the SVG file
     dwg.save()
 
-def extractPartsAndWalls2(imgFile, columnImg):
+def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     imgCol = cv.imread(imgFile)
     if imgCol is None:
         return
 
     img = cv.cvtColor(imgCol, cv.COLOR_BGR2GRAY)
-    dwg = svgwrite.Drawing('test.svg', size = img.shape)
+    dwg = svgwrite.Drawing(out, size = img.shape)
     dwg.viewbox(minx=0, miny=0, width=img.shape[0], height=img.shape[1])
 
-    dwg.add(dwg.image(imgFile, insert=(0, 0), size=img.shape))
+    absPath = os.path.abspath(imgFile)
+    dwg.add(dwg.image(absPath, insert=(0, 0), size=img.shape))
 
     points = contour.getContour(img)
     print(len(points))
-    #for point in points:
-    #    if point[2] < 0:
-    #        continue
+    for point in points:
+        if point[2] < 0:
+            continue
 
-    #    dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill="rgb(0,200,200)"))
+        col = int(255 - point[2])
 
-    columns = getColumnCenter(columnImg)
-    circleAreas = []
-    walls = []
+        c = "rgb(255,{},{})".format(col, col)
 
-    contours = Contour.convertContour(points)
-    for points in contours:
-        miniCons = Contour.getContourParts(points, img)
-        #for con in miniCons:
-        #    dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
+        dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
+
+    # columns = getColumnCenter(columnImg)
+    # circleAreas = []
+    # walls = []
+
+    # contours = Contour.convertContour(points)
+    # for points in contours:
+    #     miniCons = Contour.getContourParts(points, img)
+    #     for con in miniCons:
+    #         dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
         
-        lines = findCorners(miniCons)
-        for i in range(-1, len(lines)-1):
-            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
+    #     lines = findCorners(miniCons)
+    #     for i in range(-1, len(lines)-1):
+    #         dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
 
-        segments = splitIntoSegments(img, lines)
-        for seg in segments:
-            dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
+    #     segments = splitIntoSegments(img, lines)
+    #     for seg in segments:
+    #         dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
 
-        for seg in segments:
-            circles, lin = findCircles(seg)
-            lines.extend(lin)
-            for c in circles:
-                c.drawOutline(dwg, 1)
+    #     for seg in segments:
+    #         circles, lin = findCircles(seg)
+    #         lines.extend(lin)
+    #         #for c in circles:
+    #         #    c.drawOutline(dwg, 1)
 
-            if len(circles) > 0:
-                circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
+    #         if len(circles) > 0:
+    #             circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
 
-    CircleArea.checkNeighboringCircleAreas(circleAreas, img)
+    # CircleArea.checkNeighboringCircleAreas(circleAreas, img)
     
-    for area in circleAreas:
-        walls.extend(area.getWalls())
+    # for area in circleAreas:
+    #     walls.extend(area.getWalls())
 
-    for area in circleAreas:
-        area.findCurves(columns, walls)
+    # for area in circleAreas:
+    #     area.findCurves(columns, walls)
 
 
-    for area in circleAreas:
-        area.drawArea(dwg, 3)
+    # for area in circleAreas:
+    #     area.drawArea(dwg, 3)
 
-    for col in columns:
-        dwg.add(dwg.circle(center=col.toArr(), r=5, fill="rgb(150,0,0)"))
+    # for col in columns:
+    #     dwg.add(dwg.circle(center=col.toArr(), r=5, fill="rgb(150,0,0)"))
 
     zoom_script = """
         var svgElement = document.documentElement;
@@ -302,15 +309,6 @@ def extractPartsAndWalls2(imgFile, columnImg):
     dwg.save()
 
 if __name__ == "__main__":
-    #print("OpenCV version:", cv.__version__)
-    #testHoughLine()
-    #testHoughCircle()
-    #testHarrisCorners()
-
-    #nums = np.arange(1,1111)
-
-    #with Pool(16) as p:
-    #    p.map(test, nums)
     
     #nums = [87, 94, 114, 177, 403, 476, 661, 673]
 
@@ -322,7 +320,6 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/02_sl/ZB_0476_02_sl.png", "../Dataset/03_co/ZB_0476_03_co.png", "../Dataset/07_os/ZB_0476_07_os.png")
 
 
-    # 403 673 
     #extractPartsAndWalls("../Dataset/Selected/ZB_0087_02_sl.png", "../Dataset/Selected/ZB_0087_03_co.png")
     #extractPartsAndWalls("../Dataset/Selected/ZB_0094_02_sl.png", "../Dataset/Selected/ZB_0094_03_co.png", "../Dataset/07_os/ZB_0094_07_os.png")
     # extractPartsAndWalls("../Dataset/Selected/ZB_0114_02_sl.png", "../Dataset/Selected/ZB_0114_03_co.png")
@@ -332,12 +329,16 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png", "../Dataset/Selected/ZB_0661_07_os.png")
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
-    #testContour("../Dataset/Selected/ZB_0673_07_os.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
-    #testContour("../Dataset/07_os/ZB_0476_07_os.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0177_07_os.png", "../Dataset/03_co/ZB_0177_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0403_07_os.png", "../Dataset/03_co/ZB_0403_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0476_07_os.png", "../Dataset/03_co/ZB_0476_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0661_07_os.png", "../Dataset/03_co/ZB_0661_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0673_07_os.png", "../Dataset/03_co/ZB_0673_03_co.png")
 
-    #arr1 = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float64)
-    #arr2 = np.array([5.0, 6.0, 7.0, 8.0], dtype=np.float64)
-
-    #result = contour.add(arr1, arr2)
-    #print(f"Result of addition: {result}")
+    #nums = [87, 94, 114, 177, 403, 476, 661, 673]
+    #nums = [87]
+    #with Pool(8) as p:
+    #   p.map(selectedTest, nums)

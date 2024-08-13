@@ -110,8 +110,6 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
             int idx = buIdx + y * buWidth + x;
             Bucket bu = buckets[idx];
             int leng = bu.length;
-            if (leng > 50)
-                printf("Weird %d %d %d %d\n", idx, leng, idx % buWidth, idx/buWidth);
 
             for (int i = 0; i < leng; i++)
             {
@@ -126,8 +124,8 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     continue;
                 }
                 double d = dist(bigPoint, p);
-                if (d < 2.5) {
-                    if (d < 0.5 || bigPoint.val < p.val) {
+                if (d < 2) {
+                    if (d < 0.5 || bigPoint.val > p.val) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
                         (*counter)--;
@@ -233,6 +231,8 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     Bucket *buckets = malloc(buWidth * buHeight * sizeof(Bucket)); 
     printf("Buckets: %d\n", buWidth * buHeight);
 
+    const int TRESHHOLD = 250;
+
     // caluculate optimal postion of pixels
     for (npy_intp y = 1; y < shape[0]-1; y++) {
         for (npy_intp x = 1; x < shape[1]-1; x++) {
@@ -241,7 +241,10 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
             npy_intp index3 = (y+1) * shape[1] + x;
             npy_intp index4 = (y+1) * shape[1] + x+1;
 
-            if (data[index] > 150 || data[index2] > 150 || data[index3] > 150 || data[index4] > 150) {
+
+
+            //TODO: Farben normaliesieren
+            if (data[index] > TRESHHOLD || data[index2] > TRESHHOLD || data[index3] > TRESHHOLD || data[index4] > TRESHHOLD) {
                 continue;
             }
 
@@ -266,28 +269,9 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
 
     printf("Point Count: %d \n", counter);
 
-    //get darkest pixel in area
-    /*for (int y = 1; y < buHeight-1; y++) {
-        for (int x = 1; x < buWidth-1; x++) {
-            int buIdx = y * buWidth + x;
-            int leng = buckets[buIdx].length;
-            for (int i = 0; i < leng; i++)
-            {
-                Point p = buckets[buIdx].points[i];
-                if (!checkIfBiggestValue(buckets, p, buIdx, buWidth)) {
-                    
-                    removePoint(buckets, buIdx, i);
-                    leng--;
-                    i--;
-                    counter--;
-                    continue;
-                }
-            }
-        }
-    }*/
 
     int counter2 = counter;
-    for (int i = 0; i < counter2; i++)
+    /*for (int i = 0; i < counter2; i++)
     {
         int buIdx = pointRefs[i].bucketIdx;
         Point p = points[pointRefs[i].ref];
@@ -295,7 +279,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
             continue;
 
         checkIfBiggestValue(buckets, points, p, buIdx, pointRefs[i].ref, buWidth, &counter);
-    }
+    }*/
    
 
     npy_intp dims[2] = {counter+10, 3};
@@ -308,7 +292,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     double *data_result = (double*) PyArray_DATA(result);
 
     // find contours by finding closest points to each other 
-    int i = 0;
+    /*int i = 0;
     int conCounter = 0;
     for (int y = 1; y < buHeight-1; y++) {
         for (int x = 1; x < buWidth-1; x++) {
@@ -352,9 +336,9 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 return (PyObject*) result;
             }
         }
-    }
+    }*/
 
-    /*int i = 0;
+    int i = 0;
     for (int y = 1; y < buHeight-1; y++) {
         for (int x = 1; x < buWidth-1; x++) {
             int buIdx = y * buWidth + x;
@@ -371,7 +355,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 i++;
             }
         }
-    }*/
+    }
 
     free(pointRefs);
     free(points);

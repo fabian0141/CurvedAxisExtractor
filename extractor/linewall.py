@@ -6,15 +6,15 @@ class LineWall(Wall):
 
     THRESHOLD = 2
 
-    def __init__(self, p1, maxP1, maxP2, state):
+    def __init__(self, col, maxP1, maxP2, state):
         self.type = Wall.LINE
         self.state = state
 
-        if p1 is not None:
+        if col is not None:
             dir = maxP2 - maxP1
             dir /= abs(dir)
-            self.minP1 = p1 - dir
-            self.minP2 = p1 + dir
+            self.minP1 = col - dir
+            self.minP2 = col + dir
         self.maxP1 = maxP1
         self.maxP2 = maxP2
         #self.angle = PMath.getAxisAngle(minP1, minP2)
@@ -28,12 +28,13 @@ class LineWall(Wall):
             _, maxT = PMath.closestPointOnLine(self.minP1, self.minP2, self.maxP1)
             self.minP1 = col
             if t < maxT:
-                self.maxP1 = col
+                #TODO: should be improved. dont just increase randomly
+                self.maxP1 = col + (col - self.minP2)
         elif t > 1:
             _, maxT = PMath.closestPointOnLine(self.minP1, self.minP2, self.maxP2)
             self.minP2 = col
             if t > maxT:
-                self.maxP2 = col
+                self.maxP2 = col + (col - self.minP1)
 
         return True
 
@@ -43,8 +44,10 @@ class LineWall(Wall):
             point2 = PMath.segmentsIntersection(self.minP2, self.maxP2, other.maxP1, other.maxP2)
 
         elif other.type == Wall.CIRCLE:
-            point1 = Wall.circleLineIntersection(self.minP2, self.maxP1, other.circle)
-            point2 = Wall.circleLineIntersection(self.minP1, self.maxP2, other.circle)
+            point1 = Wall.circleLineIntersection(self.minP2, self.maxP1, other.middle, other.radius, 
+                                                     other.fullCircle, other.maxAng1, other.maxAng2)
+            point2 = Wall.circleLineIntersection(self.minP1, self.maxP2, other.middle, other.radius, 
+                                                     other.fullCircle, other.maxAng1, other.maxAng2)
 
         if point1 is not None:
             self.maxP1 = point1
