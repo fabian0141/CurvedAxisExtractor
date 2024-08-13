@@ -216,57 +216,57 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
     points = contour.getContour(img)
     print(len(points))
-    for point in points:
-        if point[2] < 0:
-            continue
+    # for point in points:
+    #     if point[2] < 0:
+    #         continue
 
-        col = int(255 - point[2])
+    #     col = int(255 - point[2])
 
-        c = "rgb(255,{},{})".format(col, col)
+    #     c = "rgb(255,{},{})".format(col, col)
 
-        dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
+    #     dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
 
-    # columns = getColumnCenter(columnImg)
-    # circleAreas = []
-    # walls = []
+    columns = getColumnCenter(columnImg)
+    circleAreas = []
+    walls = []
 
-    # contours = Contour.convertContour(points)
-    # for points in contours:
-    #     miniCons = Contour.getContourParts(points, img)
-    #     for con in miniCons:
-    #         dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
+    contours = Contour.convertContour(points)
+    for points in contours:
+        miniCons = Contour.getContourParts(points, img)
+        for con in miniCons:
+            dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
         
-    #     lines = findCorners(miniCons)
-    #     for i in range(-1, len(lines)-1):
-    #         dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
+        lines = findCorners(miniCons)
+        for i in range(-1, len(lines)-1):
+            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
 
-    #     segments = splitIntoSegments(img, lines)
-    #     for seg in segments:
-    #         dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
+        segments = splitIntoSegments(img, lines)
+        for seg in segments:
+            dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
 
-    #     for seg in segments:
-    #         circles, lin = findCircles(seg)
-    #         lines.extend(lin)
-    #         #for c in circles:
-    #         #    c.drawOutline(dwg, 1)
+        for seg in segments:
+            circles, lin = findCircles(seg)
+            lines.extend(lin)
+            #for c in circles:
+            #    c.drawOutline(dwg, 1)
 
-    #         if len(circles) > 0:
-    #             circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
+            if len(circles) > 0:
+                circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
 
-    # CircleArea.checkNeighboringCircleAreas(circleAreas, img)
+    CircleArea.checkNeighboringCircleAreas(circleAreas, img)
     
-    # for area in circleAreas:
-    #     walls.extend(area.getWalls())
+    for area in circleAreas:
+        walls.extend(area.getWalls())
 
-    # for area in circleAreas:
-    #     area.findCurves(columns, walls)
+    for area in circleAreas:
+        area.findCurves(columns, walls)
 
 
-    # for area in circleAreas:
-    #     area.drawArea(dwg, 3)
+    for area in circleAreas:
+        area.drawArea(dwg, 3)
 
-    # for col in columns:
-    #     dwg.add(dwg.circle(center=col.toArr(), r=5, fill="rgb(150,0,0)"))
+    for col in columns:
+        dwg.add(dwg.circle(center=col.toArr(), r=5, fill="rgb(150,0,0)"))
 
     zoom_script = """
         var svgElement = document.documentElement;
@@ -331,14 +331,18 @@ if __name__ == "__main__":
 
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0177_07_os.png", "../Dataset/03_co/ZB_0177_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0403_07_os.png", "../Dataset/03_co/ZB_0403_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0476_07_os.png", "../Dataset/03_co/ZB_0476_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0661_07_os.png", "../Dataset/03_co/ZB_0661_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0673_07_os.png", "../Dataset/03_co/ZB_0673_03_co.png")
 
-    #nums = [87, 94, 114, 177, 403, 476, 661, 673]
+    #num = "0005"
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_{}_07_os.png".format(num), "../Dataset/03_co/ZB_{}_03_co.png".format(num))
+
+
+    nums = [87, 94, 114, 177, 403, 476, 661, 673]
     #nums = [87]
-    #with Pool(8) as p:
-    #   p.map(selectedTest, nums)
+    with Pool(8) as p:
+       p.map(selectedTest, nums)

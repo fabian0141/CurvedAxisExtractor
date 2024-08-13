@@ -33,7 +33,7 @@ int partition(PointRef arr[], int low, int high) {
     int i = low - 1;
 
     for (int j = low; j < high; j++) {
-        if (arr[j].value < pivot) {
+        if (arr[j].value >= pivot) {
             i++;
             swap(&arr[i], &arr[j]);
         }
@@ -124,7 +124,7 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     continue;
                 }
                 double d = dist(bigPoint, p);
-                if (d < 2) {
+                if (d < 1.5) {
                     if (d < 0.5 || bigPoint.val > p.val) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
@@ -231,7 +231,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     Bucket *buckets = malloc(buWidth * buHeight * sizeof(Bucket)); 
     printf("Buckets: %d\n", buWidth * buHeight);
 
-    const int TRESHHOLD = 250;
+    const int TRESHHOLD = 160;
 
     // caluculate optimal postion of pixels
     for (npy_intp y = 1; y < shape[0]-1; y++) {
@@ -271,7 +271,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
 
 
     int counter2 = counter;
-    /*for (int i = 0; i < counter2; i++)
+    for (int i = 0; i < counter2; i++)
     {
         int buIdx = pointRefs[i].bucketIdx;
         Point p = points[pointRefs[i].ref];
@@ -279,7 +279,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
             continue;
 
         checkIfBiggestValue(buckets, points, p, buIdx, pointRefs[i].ref, buWidth, &counter);
-    }*/
+    }
    
 
     npy_intp dims[2] = {counter+10, 3};
@@ -292,7 +292,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     double *data_result = (double*) PyArray_DATA(result);
 
     // find contours by finding closest points to each other 
-    /*int i = 0;
+    int i = 0;
     int conCounter = 0;
     for (int y = 1; y < buHeight-1; y++) {
         for (int x = 1; x < buWidth-1; x++) {
@@ -336,9 +336,9 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 return (PyObject*) result;
             }
         }
-    }*/
+    }
 
-    int i = 0;
+    /*int i = 0;
     for (int y = 1; y < buHeight-1; y++) {
         for (int x = 1; x < buWidth-1; x++) {
             int buIdx = y * buWidth + x;
@@ -355,7 +355,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 i++;
             }
         }
-    }
+    }*/
 
     free(pointRefs);
     free(points);
