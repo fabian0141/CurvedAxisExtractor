@@ -1,15 +1,20 @@
+import cv2 as cv
+import numpy as np
+import math
+
 def testHoughLine():
-    src = cv.imread(cv.samples.findFile("../selected/ZB_0087_02_sl.png"), cv.IMREAD_GRAYSCALE)
+    src = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0087_02_sl.png"), cv.IMREAD_GRAYSCALE)
+    src2 = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0087_02_sl.png"))
 
 
     # Edge detection
     dst = cv.Canny(src, 0, 0, None, 3)
-    #lines = cv.HoughLines(dst, 1, np.pi / 180, 150)
+    #lines = cv.HoughLines(dst, 1, np.pi / 180, 100)
 
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
     cdstP = np.copy(cdst)
 
-    # Draw the lines
+    #Draw the lines
     # if lines is not None:
     #     for i in range(0, len(lines)):
     #         rho = lines[i][0][0]
@@ -23,15 +28,19 @@ def testHoughLine():
     #         cv.line(cdst, pt1, pt2, (0,0,255), 3, cv.LINE_AA)
 
 
-    linesP = cv.HoughLinesP(dst, 1, np.pi / 180, 5, None, 10, 20)
+    linesP = cv.HoughLinesP(dst, 1, np.pi / 720, 70, None, 10, 20)
     print("Line Count: " + str(len(linesP)))
 
     if linesP is not None:
+        col = 250
         for i in range(0, len(linesP)):
             l = linesP[i][0]
-            cv.line(cdstP, (l[0], l[1]), (l[2], l[3]), (0,0,255), 3, cv.LINE_AA)
+            cv.line(src2, (l[0], l[1]), (l[2], l[3]), (col,col, 0), 1)
+            cv.circle(src2, (l[0], l[1]), 1, (155,0,155), 2)
+            cv.circle(src2, (l[2], l[3]), 1, (155,0,155), 2)
+            col = (col+50)%250
 
-    cv.imwrite('test.png', cdstP)
+    cv.imwrite('test.png', src2)
 
     #cv.imshow("Source", src)
     #cv.imshow("Destination", dst)
@@ -50,27 +59,23 @@ def testHoughLine():
 #k = cv.waitKey(0)
 
 def testHarrisCorners():
-    img = cv.imread(cv.samples.findFile("../selected/ZB_0087_07_os.png"))
+    print("Test")
+    img = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0476_07_os.png"))
     gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
 
-    dst = cv.cornerHarris(gray, 5,3,0.002)
+    dst = cv.cornerHarris(gray, 3,3,0.005)
     
     #result is dilated for marking the corners, not important
     dst = cv.dilate(dst,None)
     
     # Threshold for an optimal value, it may vary depending on the image.
-    img[dst>0.01*dst.max()]=[100,0,255]
-    
-    cv.imshow('dst', img)
-    while(1):
-        if cv.waitKey() == 27:
-            cv.imwrite('test.png', img)
-            return 0
+    img[dst>0.005*dst.max()]=[100,0,255]
+    cv.imwrite('test.png', img)
 
 
 def testHoughCircle():
     # Loads an image
-    src = cv.imread(cv.samples.findFile("../selected/ZB_0087_02_sl.png"), cv.IMREAD_COLOR)
+    src = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0476_02_sl.png"), cv.IMREAD_COLOR)
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 
     #gray = cv.Canny(gray, 200, 20, None, 3) #ground plan
@@ -79,7 +84,7 @@ def testHoughCircle():
     #cv.imshow("Display window", gray)
     #k = cv.waitKey(0)
 
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 50, param1=30, param2=20, minRadius=200, maxRadius=3000)
+    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 300, param1=200, param2=30, minRadius=100, maxRadius=3000)
 
     #gray = cv.medianBlur(gray, 5) #columns
     #circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, 50, param1=20, param2=10, minRadius=5, maxRadius=50)
@@ -98,12 +103,8 @@ def testHoughCircle():
             cv.circle(src, center, radius, (0, 0, 255), 3)
 
 
-    cv.imshow("Destination", src)
 
-    while(1):
-        if cv.waitKey() == 27:
-            cv.imwrite('test.png', src)
-            return 0
+    cv.imwrite('test.png', src)
 
 
 def findCirclesFromContour(contour, img):
@@ -164,7 +165,6 @@ def findBigCircleFromContour(contour, img):
 
     return None, None
 
-
 def findCornersFromContour(contour, img):
 
     lastCorner = 0
@@ -215,8 +215,8 @@ def findCornersFromContour(contour, img):
 
     return corners, splitContours
 
-
 def findLinesFromContour(cons, img):
+
 
     #sum = [0, 0]
 
@@ -245,3 +245,7 @@ def findLinesFromContour(cons, img):
 
         else:
             angle = newAngle
+
+
+if __name__ == "__main__":
+    testHoughCircle()

@@ -36,8 +36,8 @@ class PMath:
 
     def getAxisAngle(p1, p2):
         unitPoint = p2 - p1
-        unitPoint = unitPoint / abs(unitPoint)
-        angle = -np.arctan2(unitPoint.y, unitPoint.x)
+        #unitPoint = unitPoint / abs(unitPoint) Not needed?
+        angle = np.arctan2(unitPoint.y, unitPoint.x) #should it be negative?
         return angle if angle >= 0 else angle + 2 * np.pi
     
     def segmentsIntersection(p1, p2, q1, q2):

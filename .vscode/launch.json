@@ -12,6 +12,16 @@
             "console": "integratedTerminal",
             "subProcess": true,
             "env": {"PYDEVD_USE_CYTHON": "0"}
+        },
+        {
+            "name": "Old Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "oldTests.py",
+            "console": "integratedTerminal",
+            "subProcess": true,
+            "env": {"PYDEVD_USE_CYTHON": "0"}
         }
+
     ]
 }

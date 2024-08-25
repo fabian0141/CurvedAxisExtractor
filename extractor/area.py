@@ -44,7 +44,7 @@ class CircleArea:
                 isCirclePart |= circle.columnIsPart(col)
 
             if not isLinePart:
-                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col):
+                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col): #TODO: consider allignedmiddle
                     columns2.append(col)
                     continue
 
@@ -113,7 +113,7 @@ class CircleArea:
             if (c.fullCircle):
                 continue
 
-            ang = PMath.angle(c.start, c.end, c.middle)
+            ang = PMath.angle(c.start, c.end, c.middle) #TODO: not working for angles bigger 180
             circleData.append([i, c.start, c.end, c.middle, ang])
 
         circlePairs = []
@@ -125,7 +125,7 @@ class CircleArea:
                 # connect end with start
                 if circleData[i][2] == circleData[j][1]:
                     ang = circleData[i][4] + circleData[j][4]
-                    if ang < 0:
+                    if ang < 0: #TODO: After?
                         continue
                     ang -= PMath.angle(circleData[i][1], circleData[i][2], circleData[j][2])
                     circlePairs.append((i, j, ang))

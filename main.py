@@ -209,21 +209,19 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
     img = cv.cvtColor(imgCol, cv.COLOR_BGR2GRAY)
     dwg = svgwrite.Drawing(out, size = img.shape)
-    dwg.viewbox(minx=0, miny=0, width=img.shape[0], height=img.shape[1])
+    dwg.viewbox(minx=2900, miny=2900, width=img.shape[0], height=img.shape[1])
 
     absPath = os.path.abspath(imgFile)
     dwg.add(dwg.image(absPath, insert=(0, 0), size=img.shape))
 
     points = contour.getContour(img)
     print(len(points))
-    # for point in points:
+    # for point in points[:-10]:
     #     if point[2] < 0:
     #         continue
 
     #     col = int(255 - point[2])
-
     #     c = "rgb(255,{},{})".format(col, col)
-
     #     dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
 
     columns = getColumnCenter(columnImg)
@@ -234,11 +232,11 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     for points in contours:
         miniCons = Contour.getContourParts(points, img)
         for con in miniCons:
-            dwg.add(dwg.circle(center=con.first.toArr(), r=1.5, fill="rgb(150,150,150)"))
+            dwg.add(dwg.circle(center=con.first.toArr(), r=2.5, fill="rgb(150,150,150)"))
         
         lines = findCorners(miniCons)
         for i in range(-1, len(lines)-1):
-            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=3, fill="rgb(150,200,250)"))
+            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=2, fill="rgb(150,200,250)"))
 
         segments = splitIntoSegments(img, lines)
         for seg in segments:
@@ -255,6 +253,9 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
     CircleArea.checkNeighboringCircleAreas(circleAreas, img)
     
+
+    #TODO: check if column inbetween two other columns on a line
+
     for area in circleAreas:
         walls.extend(area.getWalls())
 
@@ -271,7 +272,11 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     zoom_script = """
         var svgElement = document.documentElement;
         var zoomLevel = 1;
-        var viewBox = [0, 0, 5905, 5905];
+        var viewBox = [2900, 2900, 5905, 5905];
+
+        var isDragging = false;
+        var dragStart = { x: 0, y: 0 };
+        var viewBoxStart = [0, 0];
 
         svgElement.addEventListener('wheel', function(event) {
             event.preventDefault();
@@ -302,6 +307,37 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
             svgElement.setAttribute('viewBox', viewBox.join(' '));
         }, { passive: false });
+
+        // Handle mouse down event to start dragging
+        svgElement.addEventListener('mousedown', function(event) {
+            isDragging = true;
+            dragStart.x = event.clientX;
+            dragStart.y = event.clientY;
+            viewBoxStart = [...viewBox];
+        });
+
+        // Handle mouse move event to drag the viewBox
+        svgElement.addEventListener('mousemove', function(event) {
+            if (isDragging) {
+                var dx = (event.clientX - dragStart.x) * (viewBoxStart[2] / svgElement.clientWidth) / 5;
+                var dy = (event.clientY - dragStart.y) * (viewBoxStart[3] / svgElement.clientHeight) / 5;
+
+                viewBox[0] = viewBoxStart[0] - dx;
+                viewBox[1] = viewBoxStart[1] - dy;
+
+                svgElement.setAttribute('viewBox', viewBox.join(' '));
+            }
+        });
+
+        // Handle mouse up event to stop dragging
+        svgElement.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        // Handle mouse leave event to stop dragging if mouse leaves the SVG area
+        svgElement.addEventListener('mouseleave', function() {
+            isDragging = false;
+        });
     """
     dwg.add(dwg.script(content=zoom_script, type="text/ecmascript"))
 
@@ -338,7 +374,7 @@ if __name__ == "__main__":
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0661_07_os.png", "../Dataset/03_co/ZB_0661_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0673_07_os.png", "../Dataset/03_co/ZB_0673_03_co.png")
 
-    #num = "0005"
+    #num = "0114"
     #extractPartsAndWalls2("../Dataset/07_os/ZB_{}_07_os.png".format(num), "../Dataset/03_co/ZB_{}_03_co.png".format(num))
 
 

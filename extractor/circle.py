@@ -20,7 +20,6 @@ class Circle:
         a = int(angle1 <= angle2)
         b = int(angle3 < angle2)
         c = int(angle1 <= angle3)
-        d = (a + b + c) % 2
 
         if (a + b + c) % 2 == 0:
             self.startAngle = angle1
@@ -41,7 +40,7 @@ class Circle:
 
     def getCircle(seg, start, end):
 
-        pointDist1 = seg.dist(start, end // 2)
+        pointDist1 = seg.dist(start, (end + start) // 2)
         pointDist2 = seg.dist(start, end)
 
         m = 1

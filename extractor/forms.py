@@ -49,6 +49,11 @@ class Line:
         self.last = self.points[-1]
         return self
     
+    def __getitem__(self, i):
+        return self.points[i]
+    
+    def __len__(self):
+        return len(self.points)
 
     def push(self, point, pos):
         if pos == Line.START:

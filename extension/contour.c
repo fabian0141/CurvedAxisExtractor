@@ -124,15 +124,12 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     continue;
                 }
                 double d = dist(bigPoint, p);
-                if (d < 1.5) {
-                    if (d < 0.5 || bigPoint.val > p.val) {
+                if ((d < 1.5 && bigPoint.val > p.val) || (d < 1 && bigPoint.val == p.val)) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
                         (*counter)--;
                         i--;
                         leng--;
-
-                    }
                 }
             }
         }
