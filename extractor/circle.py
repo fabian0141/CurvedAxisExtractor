@@ -50,8 +50,8 @@ class Circle:
             m = 1.5
 
         p1 = seg[start].first
-        p2 = seg[int((start + end) / (2*m))].first
-        p3 = seg[int((end-1) / m)].last
+        p2 = seg[int(start + (end-start) / (2*m))].first
+        p3 = seg[int((start-1) + (end-start) / m)].last
         
         a = [[2*p1.x, 2*p1.y, 1], \
             [2*p2.x, 2*p2.y, 1], \
@@ -111,8 +111,8 @@ class Circle:
         startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
         endPoint = Vec2([np.cos(self.endAngle), -np.sin(self.endAngle)]) * self.radius + self.middle
 
-        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=startPoint.toArr(), stroke=color))
-        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=endPoint.toArr(), stroke=color))
+        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=startPoint.toArr(), stroke=color, stroke_width=thickness))
+        dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=endPoint.toArr(), stroke=color, stroke_width=thickness))
 
         self.drawCircleCurve(dwg, self.radius, thickness, color)
 
@@ -132,7 +132,7 @@ class Circle:
             angle = self.startAngle + angleRange * i / rangeParts
             point = Vec2([np.cos(angle), -np.sin(angle)]) * radius + self.middle
 
-            dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color))
+            dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color, stroke_width=thickness))
             startPoint = point
 
     

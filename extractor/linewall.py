@@ -6,18 +6,22 @@ class LineWall(Wall):
 
     THRESHOLD = 2
 
-    def __init__(self, col, maxP1, maxP2, state):
+    def __init__(self, state, start=None, end=None, col=None, dir=None):
         self.type = Wall.LINE
         self.state = state
 
         if col is not None:
-            dir = maxP2 - maxP1
-            dir /= abs(dir)
-            self.minP1 = col - dir
-            self.minP2 = col + dir
-        self.maxP1 = maxP1
-        self.maxP2 = maxP2
-        #self.angle = PMath.getAxisAngle(minP1, minP2)
+            self.origin = col
+            self.dir = dir
+            self.t1 = 10000
+            self.t2 = 10000
+            self.maxT1 = 10000
+            self.maxT2 = 10000
+        else: 
+            self.dir = abs(end - start)
+            self.origin = start
+            self.t1 = 0
+            self.t2 = 
 
     def columnIsPart(self, col):
         point, t = PMath.closestPointOnLine(self.minP1, self.minP2, col)
@@ -56,4 +60,4 @@ class LineWall(Wall):
             self.maxP2 = point2
 
     def drawWall(self, dwg, thickness):
-        dwg.add(dwg.line(start=self.maxP1.toArr(), end=self.maxP2.toArr(), stroke="rgb(200,150,0)"))
+        dwg.add(dwg.line(start=self.maxP1.toArr(), end=self.maxP2.toArr(), stroke="rgb(200,150,0)", stroke_width=thickness))

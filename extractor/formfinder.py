@@ -46,7 +46,7 @@ def findLines(parts):
     #         leng -= 1
 
     leng = len(lines)
-    # TODO: Need to check if start is valid (img 114)
+
     start = -1
     improveCorner = False
     i = 0
@@ -73,7 +73,6 @@ def findLines(parts):
 
     return lines
 
-#TODO: still some problems
 def findCorners(lines):
 
     leng = len(lines)
@@ -98,15 +97,24 @@ def findCorners(lines):
             continue
 
         if improveCorner:
-            intersection = PMath.linesIntersection(lines[start].first, lines[start].last, lines[i].first, lines[i].last)
-            if intersection is None:
-                print("How is that possible?!")
 
-            lines[start].push(intersection, Line.END)
-            lines[i].push(intersection, Line.START)
-            improveCorner = False
+            intersection = PMath.linesIntersection(lines[i-1].first, lines[i-1].last, lines[i].first, lines[i].last)
+            if intersection is None or intersection.dist(lines[i-1].last) > 10: # lines are parallel
+                middle = (lines[i-1].last + lines[i].first) / 2
+                p1, _ = PMath.closestPointOnLine(lines[i-1].first, lines[i-1].last, middle)
+                p2, _ = PMath.closestPointOnLine(lines[i].first, lines[i].last, middle)
 
-        start = i
+                lines[i-1].replace(p1, Line.END)
+                lines[i].replace(p2, Line.START)
+                lines = lines[:i] + [Line([p1,p2])] + lines[i:]
+                improveCorner = False
+                leng += 1
+                i += 1
+            else:
+                lines[i-1].push(intersection, Line.END)
+                lines[i].push(intersection, Line.START)
+                improveCorner = False
+
         i += 1
 
     if improveCorner:
@@ -119,16 +127,23 @@ def findCorners(lines):
 def splitIntoSegments(img, lines):
     segments = [Segment()]
 
+    minAngle = (4, 0)
 
     for i in range(0, len(lines)-1):
         segments[-1] += lines[i]
-        if PMath.angle(lines[i].first, lines[i].last, lines[i+1].last) < DEG150:
+        ang = PMath.angle(lines[i].first, lines[i].last, lines[i+1].last)
+        if ang < DEG150:
             segments.append(Segment())
+        
+        if ang < minAngle[0]:
+            minAngle = (ang, i)
 
     segments[-1] += lines[-1]
 
     if len(segments) == 1:
-        return segments
+        pos = minAngle[1]
+        print(minAngle)
+        return [Segment(lines[pos+1:] + lines[:pos+1])] 
 
     if PMath.angle(lines[-1].first, lines[-1].last, lines[0].last) > DEG150:
         segments[0].prepend(segments[-1])
@@ -144,50 +159,43 @@ def findCircles(seg):
     circles = []
     lines = []
     start = 0
-
-    #startEndDist = 0
-
-    i = 1
-    while i < len(seg)-2:
+    i = 0
+    while i < len(seg)-3:
         if circle is None:
-            circle = Circle.getCircle(seg, start, i+3)
+            circle = Circle.getCircle(seg, i, i+4)
 
-            # no suitable circle found
-            if circle is None:
-                lines.append(seg[start])
-                start = i
-
-            # check if circle is valid
-            elif circle.areBetweenPointsInside(seg[i:i+3]) and circle.isContourInside(seg.getContour(start,i+3)):
-                circles.append(circle)
-
-            # circle found but not valid
-            else:
+            # no suitable circle found or not valid
+            if circle is None or not (circle.areBetweenPointsInside(seg[i:i+3]) and circle.isContourInside(seg.getContour(i,i+4))):
+                lines.append(seg[i])
                 circle = None
-                lines.append(seg[start])
+
+            # circle found
+            else:
+                circles.append(circle)
                 start = i
+
 
         else:
-            circle = Circle.getCircle(seg, start, i+3)
+            circle = Circle.getCircle(seg, start, i+4)
 
-            # TODO: better check for if radius is smaller
             # remove circle because not suitable anymore
             if circle is None:
                 circles = circles[:-1]
-                lines.extend(seg[start:i-1])
-                start = start+1
-                i = start+1
+                i = i+2
+                # lines.extend(seg[start:i+1]) TODO: check indices exactly
 
-            elif circle.areBetweenPointsInside(seg[start+1:i+3]) and circle.isContourInside(seg.getContour(start, i+3)):
+            elif circle.areBetweenPointsInside(seg[start+1:i+4]) and circle.isContourInside(seg.getContour(start, i+4)):
                 circles[-1] = circle
             else:
                 circle = None
-                lines.extend(seg[start:i-1])
-                start = i+2
                 i = i+2
+                lines.append(seg[i])
         i += 1
 
     #for circle in circles:
     #    cv.circle(img, circle.middle.toIntArr(), int(circle.radius), (0, 200, 0), 2)
+
+    if len(circles) == 0:
+        return [], seg.parts
 
     return circles, lines

@@ -9,36 +9,36 @@ def testHoughLine():
 
     # Edge detection
     dst = cv.Canny(src, 0, 0, None, 3)
-    #lines = cv.HoughLines(dst, 1, np.pi / 180, 100)
+    lines = cv.HoughLines(dst, 0.3, np.pi / 360, 50)
 
     cdst = cv.cvtColor(dst, cv.COLOR_GRAY2BGR)
     cdstP = np.copy(cdst)
 
     #Draw the lines
-    # if lines is not None:
-    #     for i in range(0, len(lines)):
-    #         rho = lines[i][0][0]
-    #         theta = lines[i][0][1]
-    #         a = math.cos(theta)
-    #         b = math.sin(theta)
-    #         x0 = a * rho
-    #         y0 = b * rho
-    #         pt1 = (int(x0 + 10000*(-b)), int(y0 + 10000*(a)))
-    #         pt2 = (int(x0 - 10000*(-b)), int(y0 - 10000*(a)))
-    #         cv.line(cdst, pt1, pt2, (0,0,255), 3, cv.LINE_AA)
+    if lines is not None:
+        for i in range(0, len(lines)):
+            rho = lines[i][0][0]
+            theta = lines[i][0][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            pt1 = (int(x0 + 10000*(-b)), int(y0 + 10000*(a)))
+            pt2 = (int(x0 - 10000*(-b)), int(y0 - 10000*(a)))
+            cv.line(src2, pt1, pt2, (0,0,255), 2)
 
 
-    linesP = cv.HoughLinesP(dst, 1, np.pi / 720, 70, None, 10, 20)
-    print("Line Count: " + str(len(linesP)))
+    #linesP = cv.HoughLinesP(dst, 1, np.pi / 720, 70, None, 10, 20)
+    #print("Line Count: " + str(len(linesP)))
 
-    if linesP is not None:
-        col = 250
-        for i in range(0, len(linesP)):
-            l = linesP[i][0]
-            cv.line(src2, (l[0], l[1]), (l[2], l[3]), (col,col, 0), 1)
-            cv.circle(src2, (l[0], l[1]), 1, (155,0,155), 2)
-            cv.circle(src2, (l[2], l[3]), 1, (155,0,155), 2)
-            col = (col+50)%250
+    # if linesP is not None:
+    #     col = 250
+    #     for i in range(0, len(linesP)):
+    #         l = linesP[i][0]
+    #         cv.line(src2, (l[0], l[1]), (l[2], l[3]), (col,col, 0), 1)
+    #         cv.circle(src2, (l[0], l[1]), 1, (155,0,155), 2)
+    #         cv.circle(src2, (l[2], l[3]), 1, (155,0,155), 2)
+    #         col = (col+50)%250
 
     cv.imwrite('test.png', src2)
 
@@ -60,16 +60,20 @@ def testHoughLine():
 
 def testHarrisCorners():
     print("Test")
-    img = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0476_07_os.png"))
+    img = cv.imread(cv.samples.findFile("../Dataset/Selected/Test.png"))
+    #img = cv.imread(cv.samples.findFile("../Dataset/Selected/ZB_0476_07_os.png"))
+    #img = cv.imread(cv.samples.findFile("../Dataset/07_os/ZB_0008_07_os.png"))
+
+
     gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
 
-    dst = cv.cornerHarris(gray, 3,3,0.005)
+    dst = cv.cornerHarris(gray, 2,3,0.005)
     
     #result is dilated for marking the corners, not important
     dst = cv.dilate(dst,None)
     
     # Threshold for an optimal value, it may vary depending on the image.
-    img[dst>0.005*dst.max()]=[100,0,255]
+    img[dst>0.0265*dst.max()]=[100,0,255]
     cv.imwrite('test.png', img)
 
 
@@ -248,4 +252,4 @@ def findLinesFromContour(cons, img):
 
 
 if __name__ == "__main__":
-    testHoughCircle()
+    testHarrisCorners()

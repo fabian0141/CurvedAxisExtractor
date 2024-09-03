@@ -92,5 +92,5 @@ class CircleWall(Wall):
             angle = self.maxAng1 + angleRange * i / rangeParts
             point = Vec2([np.cos(angle), -np.sin(angle)]) * self.radius + self.middle
 
-            dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color))
+            dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color, stroke_width=thickness))
             startPoint = point

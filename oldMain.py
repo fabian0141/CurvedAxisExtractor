@@ -54,7 +54,6 @@ def splitContours(con, img):
            #cv.circle(img, con[idx].toIntArr(), 1, (255, 0, 0), 1)
            #cv.line(img, con[idx].toIntArr(), con[i+10].toIntArr(), (150,150,150), 1)
 
-    # TODO: handle end by finding corners inside
 
     return miniCons
 
@@ -264,7 +263,6 @@ def findCircles(part, img, columns):
             else:
                 middlePoint, radius = getCircle(startPoint, part[1][(startIdx+i+3) // 2], part[1][i+3])
 
-            # TODO: better check for if radius is smaller
             if middlePoint is None:
                 circles = circles[:-1]
                 continue

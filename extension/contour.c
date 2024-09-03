@@ -52,7 +52,6 @@ void quickSort(PointRef arr[], int low, int high) {
 }
 
 //python setup.py build && python setup.py install
-// TODO: sort points by value and check then for biggest value
 // Function to add two numbers
 // For Mac: export ARCHFLAGS="-arch x86_64"  
 static PyObject* add(PyObject* self, PyObject* args) {
@@ -124,7 +123,7 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     continue;
                 }
                 double d = dist(bigPoint, p);
-                if ((d < 1.5 && bigPoint.val > p.val) || (d < 1 && bigPoint.val == p.val)) {
+                if ((d < 2.5 && bigPoint.val > p.val) || (d < 1 && bigPoint.val == p.val)) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
                         (*counter)--;
@@ -187,9 +186,9 @@ static Point pixelPos(int x, int y, double val, uint8_t *data, npy_intp *shape) 
 
 
             npy_intp idx = v * shape[1] + u;
-            px += (u - Sx) * (255-data[idx])/255;
-            py += (v - Sy) * (255-data[idx])/255;
-            sum += (255-data[idx]);    
+            px += (u - Sx) * data[idx]/255;
+            py += (v - Sy) * data[idx]/255;
+            sum += data[idx];    
 
         }
     }
@@ -228,20 +227,46 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     Bucket *buckets = malloc(buWidth * buHeight * sizeof(Bucket)); 
     printf("Buckets: %d\n", buWidth * buHeight);
 
-    const int TRESHHOLD = 160;
+    const int TRESHHOLD = 230;
+    const int TRESHHOLD2 = 50;
 
-    // caluculate optimal postion of pixels
+    float max = 0;
+
     for (npy_intp y = 1; y < shape[0]-1; y++) {
         for (npy_intp x = 1; x < shape[1]-1; x++) {
+            npy_intp index = y * shape[1] + x;
+
+            data[index] = 255 - data[index];
+            if (max < data[index]) {
+                max = data[index];
+            }
+        }
+    }
+
+    float span = 255/max;
+    printf("Span: %f, %f \n", span, max);
+
+    for (npy_intp y = 1; y < shape[0]-1; y++) {
+        for (npy_intp x = 1; x < shape[1]-1; x++) {
+            npy_intp index = y * shape[1] + x;
+
+            data[index] = data[index]*span;
+        }
+    }
+
+    // caluculate optimal postion of pixels
+    for (npy_intp y = 2; y < shape[0]-2; y++) {
+        for (npy_intp x = 2; x < shape[1]-2; x++) {
             npy_intp index = y * shape[1] + x;
             npy_intp index2 = y * shape[1] + x+1;
             npy_intp index3 = (y+1) * shape[1] + x;
             npy_intp index4 = (y+1) * shape[1] + x+1;
 
+            if (data[index] < TRESHHOLD && data[index2] < TRESHHOLD && data[index3] < TRESHHOLD && data[index4] < TRESHHOLD) {
+                continue;
+            }
 
-
-            //TODO: Farben normaliesieren
-            if (data[index] > TRESHHOLD || data[index2] > TRESHHOLD || data[index3] > TRESHHOLD || data[index4] > TRESHHOLD) {
+            if (data[index] < TRESHHOLD2 || data[index2] < TRESHHOLD2 || data[index3] < TRESHHOLD2 || data[index4] < TRESHHOLD2) {
                 continue;
             }
 
@@ -280,7 +305,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
    
 
     npy_intp dims[2] = {counter+10, 3};
-    printf("Point Count: %d \n", counter);
+    printf("Point Count2: %d \n", counter);
 
 
     result = (PyArrayObject*) PyArray_SimpleNew(2, dims, NPY_DOUBLE);

@@ -34,8 +34,7 @@ class Contour:
         print(contour[0], 0)
         for p in contour:
             i += 1
-            # TODO: check for small vonour length
-            if p[2] < 0 and len(vecContour) > 100:
+            if p[2] < 0 and len(vecContour) > 30:
                 contours.append(Contour(vecContour=vecContour))
                 vecContour = []
                 continue
@@ -100,26 +99,6 @@ class Contour:
         idx1, idx2 = Contour.getFurthest2Points(contour)
         conParts.extend(Contour.splitContourPart(Line(contour[idx1:idx2+1])))
         conParts.extend(Contour.splitContourPart(Line(contour[idx2:] + contour[:idx1+1])))
-
-        # TODO: better way to find parts
-        # for i in range(1, len(contour)-1):
-        #     #next = PMath.getAxisAngle(contour[i], contour[i+1])
-        #     d = PMath.distancePointToLine(contour[i-10], contour[i+10], contour[i])
-
-        #     if d > 1:
-        #         conParts.append(Line(contour[start:i+1]))
-        #         #conParts.extend(Contour.splitContourPart(Line(contour[start:i+1])))
-        #         start = i
-
-        #next = PMath.getAxisAngle(contour[i], contour[i+1])
-        #angle += next - last
-        #last = next
-        #    if abs(angle) > 0.05:
-        #conParts.append(Line(contour[start:] + contour[0:1]))
-        #conParts.extend(Contour.splitContourPart(Line(contour[start:] + contour[0:1])))
-
-        # TODO: test if also check for corners here
-        #conParts[-1].points.extend(contour[start:])
 
         return conParts
 

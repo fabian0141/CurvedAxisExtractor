@@ -34,6 +34,19 @@ class CircleArea:
         columns2 = []
 
         for col in columns:
+            if not col[1]:
+                continue
+
+            if col.dist(self.circle.middle) < 300 + self.circle.middle.dist(self.circle.allignedMiddle) or not self.circle.isInside(col): #TODO: consider allignedmiddle
+                lineWall = LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL)
+                circleWall = CircleWall(self.circle.middle, None, self.circle.fullCircle, col, self.circle.startAngle, self.circle.endAngle, LineWall.ADDED_WALL)
+
+
+
+
+
+
+        for col in columns:
             isLinePart = False
             isCirclePart = False
 
@@ -92,7 +105,7 @@ class CircleArea:
         for circle in self.circles:
             circle.drawWall(dwg, thickness)
 
-        self.drawColumns(dwg, thickness)
+        #self.drawColumns(dwg, thickness)
         self.circle.drawOutline(dwg, thickness)
 
     def getCirclesAreas(img, columns, circles, fullCircle = False):
@@ -108,12 +121,24 @@ class CircleArea:
     def checkNeighboringCircleAreas(circleAreas, img):
         circleData = []
 
+        if len(circleAreas) == 3:
+            c1 = circleAreas[0].circle
+            c2 = circleAreas[1].circle
+            c3 = circleAreas[2].circle
+            if (c1.end == c2.start and c2.end == c3.start and c3.end == c1.start) or (c1.start == c2.end and c2.start == c3.end and c3.start == c1.end): #TODO: check if there are overlappings
+
+                intersection = PMath.triangleCirclePoint(c1.start, c2.start, c3.start)
+                c1.allignedMiddle = intersection
+                c2.allignedMiddle = intersection
+                c3.allignedMiddle = intersection
+                return
+
         for i in range(len(circleAreas)):
             c = circleAreas[i].circle
             if (c.fullCircle):
                 continue
 
-            ang = PMath.angle(c.start, c.end, c.middle) #TODO: not working for angles bigger 180
+            ang = PMath.angle(c.start, c.end, c.middle)
             circleData.append([i, c.start, c.end, c.middle, ang])
 
         circlePairs = []
@@ -125,17 +150,17 @@ class CircleArea:
                 # connect end with start
                 if circleData[i][2] == circleData[j][1]:
                     ang = circleData[i][4] + circleData[j][4]
-                    if ang < 0: #TODO: After?
-                        continue
+
                     ang -= PMath.angle(circleData[i][1], circleData[i][2], circleData[j][2])
+                    if ang < 0:
+                        continue
                     circlePairs.append((i, j, ang))
 
                 if circleData[j][2] == circleData[i][1]:
                     ang = circleData[i][4] + circleData[j][4]
+                    ang -= PMath.angle(circleData[j][1], circleData[j][2], circleData[i][2])
                     if ang < 0:
                         continue
-
-                    ang -= PMath.angle(circleData[j][1], circleData[j][2], circleData[i][2])
                     circlePairs.append((j, i, ang))
 
         circlePairs = sorted(circlePairs, key=lambda x: x[2])
@@ -175,7 +200,7 @@ class CircleArea:
     def getWalls(self):
         walls = [
             CircleWall(self.circle.middle, self.circle.radius, self.circle.fullCircle, 
-                       None, self.circle.startAngle, self.circle.endAngle, LineWall.GUIDE_WALL),
+                       None, self.circle.startAngle, self.circle.endAngle, LineWall.HARD_WALL),
         ]
         if not self.circle.fullCircle:
             walls.append(LineWall(None, self.circle.start + (self.circle.start - self.circle.allignedMiddle)*5, self.circle.allignedMiddle, LineWall.GUIDE_WALL))

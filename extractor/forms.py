@@ -4,8 +4,8 @@ import cv2 as cv
 from extractor.pointmath import PMath
 
 class Segment:
-    def __init__(self):
-        self.parts = []
+    def __init__(self, parts = None):
+        self.parts = [] if parts == None else parts
 
     def __iadd__(self, part):
         self.parts.append(part)
@@ -63,6 +63,18 @@ class Line:
             self.points.append(point)
             self.last = point
         return self
+
+    def replace(self, point, pos):
+        if pos == Line.START:
+            self.points[0] = point
+            self.first = point
+        else:
+            self.points[-1] = point
+            self.last = point
+        return self
+    
+    def length(self):
+        return abs(self.last - self.first)
 
     #def splitShare(intersection, before, between, after):
         
