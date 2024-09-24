@@ -291,7 +291,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
 
     printf("Point Count: %d \n", counter);
 
-
+    // TODO: maybe check for biggest value instead?
     int counter2 = counter;
     for (int i = 0; i < counter2; i++)
     {

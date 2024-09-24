@@ -67,7 +67,7 @@ class Circle:
         x = np.linalg.solve(a, b)
         middlePoint = Vec2([-x[0], -x[1]])
         radius = np.sqrt(np.power(middlePoint.x, 2) + np.power(middlePoint.y, 2) - x[2])
-        if radius < 100 or radius > 3000:
+        if radius < 300 or radius > 3000:
             return None
 
         return Circle(middlePoint, radius, p1, p2, seg[end-1].last) 
@@ -76,7 +76,7 @@ class Circle:
 
         for i in range(len(between)):
             dist = self.middle.dist(between[i].first)
-            if abs(dist - self.radius) > 3:
+            if abs(dist - self.radius) > 2:
                 return False
         
         return True
@@ -84,7 +84,7 @@ class Circle:
     def isContourInside(self, contour):
         for p in contour:
             d = abs(self.middle.dist(p) - self.radius) 
-            if d > 3:
+            if d > 2:
                 return False
             
         return True
@@ -108,8 +108,8 @@ class Circle:
             dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
             return
 
-        startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
-        endPoint = Vec2([np.cos(self.endAngle), -np.sin(self.endAngle)]) * self.radius + self.middle
+        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
+        endPoint = Vec2([np.cos(self.endAngle), np.sin(self.endAngle)]) * self.radius + self.middle
 
         dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=startPoint.toArr(), stroke=color, stroke_width=thickness))
         dwg.add(dwg.line(start=self.allignedMiddle.toArr(), end=endPoint.toArr(), stroke=color, stroke_width=thickness))
@@ -124,36 +124,16 @@ class Circle:
             dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
             return
 
-        startPoint = Vec2([np.cos(self.startAngle), -np.sin(self.startAngle)]) * self.radius + self.middle
+        startPoint = Vec2([np.cos(self.startAngle), np.sin(self.startAngle)]) * self.radius + self.middle
         
         angleRange = self.endAngle - self.startAngle if self.startAngle < self.endAngle else 2 * np.pi - self.startAngle + self.endAngle
         rangeParts = int(angleRange * radius / 10)
         for i in range(rangeParts+1):
             angle = self.startAngle + angleRange * i / rangeParts
-            point = Vec2([np.cos(angle), -np.sin(angle)]) * radius + self.middle
+            point = Vec2([np.cos(angle), np.sin(angle)]) * radius + self.middle
 
             dwg.add(dwg.line(start=startPoint.toArr(), end=point.toArr(), stroke=color, stroke_width=thickness))
             startPoint = point
-
-    
-    def drawSecondLines(self, img, columns, thickness):
-        for col in columns:
-            middle = self.middle
-            vec = col - middle
-            d = col.dist(middle)
-            d = self.radius / d
-            start = middle + vec * d
-
-            alMiddle = self.allignedMiddle
-            if middle == alMiddle:
-                end = middle
-            else:
-                end = PMath.segmentsIntersection(self.start, alMiddle, start, middle)
-                if end is None:
-                    end = PMath.segmentsIntersection(self.end, alMiddle, start, middle)
-
-            cv.line(img, end.toIntArr(), start.toIntArr(), (200, 0, 200), thickness)
-
 
     def allignMiddle(self, ang):
         if self.allignedMiddle != self.middle:

@@ -31,69 +31,74 @@ class CircleArea:
 
         circles = []
         lines = []
-        columns2 = []
 
-        for col in columns:
-            if not col[1]:
+        restColumns = []
+
+        for keepColumn in columns:
+            if not keepColumn[1]:
+                restColumns.append(keepColumn[0])
                 continue
 
-            if col.dist(self.circle.middle) < 300 + self.circle.middle.dist(self.circle.allignedMiddle) or not self.circle.isInside(col): #TODO: consider allignedmiddle
-                lineWall = LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL)
-                circleWall = CircleWall(self.circle.middle, None, self.circle.fullCircle, col, self.circle.startAngle, self.circle.endAngle, LineWall.ADDED_WALL)
+            col = keepColumn[0]
+
+            if col.dist(self.circle.middle) > 300 + self.circle.middle.dist(self.circle.allignedMiddle) / 2 and self.circle.isInside(col): #TODO: consider allignedmiddle
+                dir = self.circle.middle.dir(col)
+                lineWall = LineWall(LineWall.ADDED_WALL, col=col, dir=dir)
+
+                circleWall = CircleWall(LineWall.ADDED_WALL, self.circle.middle, col=col)
+
+                lineWall.checkForIntersections(walls)
+                circleWall.checkForIntersections(walls) #TODO: check angles for no intersection
+
+                lines.append(lineWall)
+                circles.append(circleWall)
+                continue
+
+            restColumns.append(keepColumn[0])
 
 
-
-
-
-
-        for col in columns:
-            isLinePart = False
-            isCirclePart = False
-
-            for line in lines:
-                isLinePart |= line.columnIsPart(col)
-
-            for circle in circles:
-                isCirclePart |= circle.columnIsPart(col)
-
-            if not isLinePart:
-                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col): #TODO: consider allignedmiddle
-                    columns2.append(col)
+        # combine circles
+        leng = len(circles)
+        i = 0
+        while i  < leng:
+            j = i+1
+            while j < leng:
+                if circles[i].combine(circles[j]):
+                    circles.pop(j) 
+                    leng -= 1
                     continue
+                j += 1
+            i += 1
 
-                middle = self.circle.middle
-                vec = col - middle
-                d = col.dist(middle)
-                d = self.circle.radius / d
-                start = middle + vec * d
-                
-                #circles.append(CircleWall())
-                lines.append(LineWall(col, start, self.circle.middle, LineWall.ADDED_WALL))
+        #extend circles
+        for i in range(len(circles)):
+            for col in restColumns:
+                if circles[i].extend(col):
+                    dir = circles[i].middle.dir(col)   
+                    lineWall = LineWall(LineWall.ADDED_WALL, col=col, dir=dir)
+                    lineWall.checkForIntersections(walls)
 
-            if not isCirclePart:
-                if col.dist(self.circle.middle) < 300 or not self.circle.isInside(col):
+                    lines.append(lineWall)
+
+        # recenter middlepoints
+        #for circle in circles:
+        #    if len(circle.cols) > 2:
+        #        m, r = PMath.getCircle(circle.cols)
+        #        circle.middle = m
+        #        circle.radius = r 
+
+        # combine lines
+        leng = len(lines)
+        i = 0
+        while i < leng:
+            j = i+1
+            while j < leng:
+                if lines[i].combine(lines[j]):
+                    lines.pop(j) 
+                    leng -= 1
                     continue
-
-                circles.append(CircleWall(self.circle.middle, None, self.circle.fullCircle, col, 
-                                          self.circle.startAngle, self.circle.endAngle, LineWall.ADDED_WALL))
-                
-
-        #some problems with solid walls intersecting
-        # for col in columns2:
-        #     for line in lines:
-        #         line.columnIsPart(col)
-
-        #     for circle in circles:
-        #         circle.columnIsPart(col)
-
-
-
-        for line in lines:
-            line.checkForIntersections(walls)
-
-        for circle in circles:
-            circle.checkForIntersections(walls)
-
+                j += 1
+            i += 1
         
         self.circles = circles
         self.lines = lines
@@ -118,7 +123,7 @@ class CircleArea:
             areas.append(area)
         return areas
 
-    def checkNeighboringCircleAreas(circleAreas, img):
+    def checkNeighboringCircleAreas(circleAreas, img): #TODO: maybe weird case where triangle flips
         circleData = []
 
         if len(circleAreas) == 3:
@@ -198,11 +203,11 @@ class CircleArea:
             i += 1
 
     def getWalls(self):
-        walls = [
-            CircleWall(self.circle.middle, self.circle.radius, self.circle.fullCircle, 
-                       None, self.circle.startAngle, self.circle.endAngle, LineWall.HARD_WALL),
-        ]
-        if not self.circle.fullCircle:
-            walls.append(LineWall(None, self.circle.start + (self.circle.start - self.circle.allignedMiddle)*5, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
-            walls.append(LineWall(None, self.circle.end + (self.circle.end - self.circle.allignedMiddle)*5, self.circle.allignedMiddle, LineWall.GUIDE_WALL))
-        return walls
+        if self.circle.fullCircle:
+            return [CircleWall(LineWall.HARD_WALL, self.circle.middle, radius=self.circle.radius, fullCircle=True)]    
+        else:
+            return [
+                CircleWall(LineWall.HARD_WALL, self.circle.middle, radius=self.circle.radius, start=self.circle.startAngle, end=self.circle.endAngle),
+                LineWall(LineWall.GUIDE_WALL, start=self.circle.allignedMiddle, end=self.circle.start, extend=True),
+                LineWall(LineWall.GUIDE_WALL, start=self.circle.allignedMiddle, end=self.circle.end, extend=True)
+            ]

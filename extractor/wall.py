@@ -43,16 +43,6 @@ class Wall:
         return p1
     
 
-    def isInside(middle, fullCircle, start, end, p):
-        if fullCircle:
-            return True
-
-        angle = PMath.getAxisAngle(middle, p)
-        angle += (2*np.pi) if start > end and start > angle else 0
-        if start < angle < end:
-            return True
-        return False
-
 
 
     def circleIntersection(c1, c2):

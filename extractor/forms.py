@@ -38,6 +38,7 @@ class Line:
         self.points = points
         self.first = points[0]
         self.last = points[-1]
+        self.distinctiveWall = False
 
     def __iadd__(self, line):
         self.points.extend(line.points[1:])

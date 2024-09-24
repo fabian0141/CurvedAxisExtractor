@@ -55,6 +55,12 @@ class Vec2:
 
     def perp(self):
         return Vec2([-self.y, self.x])
+    
+    def dir(self, vec2):
+        return (vec2 - self) / abs(vec2 - self)
+
+    def normal(self):
+        return self.perp() / abs(self)
 
     def convertContour(contours):
         vecContour = []

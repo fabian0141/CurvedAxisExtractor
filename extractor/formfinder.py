@@ -196,6 +196,10 @@ def findCircles(seg):
     #    cv.circle(img, circle.middle.toIntArr(), int(circle.radius), (0, 200, 0), 2)
 
     if len(circles) == 0:
+        if len(seg.parts) == 1 and seg.parts[0].length() > 100:
+            seg.parts[0].distinctiveWall = True
         return [], seg.parts
+    
+    lines.extend(seg[i:])
 
     return circles, lines

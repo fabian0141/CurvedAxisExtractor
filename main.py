@@ -89,20 +89,6 @@ def extractPartsAndWalls(imgFile, columnImg, layoutImg, out = "test.png"):
         else:                                   # linux variants
             subprocess.call(('xdg-open', "test.png"))
 
-def circleLinesIntersect(c1, c2):
-    tests = [
-        [c1.start,c2.start],
-        [c1.end, c2.start],
-        [c1.start, c2.end],
-        [c1.end, c2.end],
-    ]
-
-    for test in tests:
-        if PMath.segmentsIntersection(test[0], c1.allignedMiddle, test[1], c2.allignedMiddle) is not None:
-            return True
-        
-    return False
-
 def test(num):
     print(num)
     in_path = "../Dataset/"
@@ -265,14 +251,14 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     
 
 
-    for lin in lineWalls:
-        dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,0,150)", stroke_width=5))
+    #for lin in lineWalls:
+    #    dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,0,150)", stroke_width=5))
 
     paraLines = []
     walls = []
 
     for lin in lineWalls:
-        if lin.length() > 50:
+        if lin.distinctiveWall or lin.length() > 500:
             a = True
             for i in range(len(paraLines)):
                 if PMath.isAlmostParallel(lin.first, lin.last, paraLines[i].first, paraLines[i].last):
@@ -280,11 +266,11 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
             
             if a:
                 paraLines.append(lin)
-                dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(0,0,150)", stroke_width=5))
+                #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(50,100,250)", stroke_width=20))
 
 
-        dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,150,150)", stroke_width=1))
-        walls.append(LineWall(None, lin.first, lin.last, LineWall.HARD_WALL))
+        #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,150,150)", stroke_width=1))
+        walls.append(LineWall(LineWall.HARD_WALL, start=lin.first, end=lin.last))
 
 
 
@@ -299,22 +285,22 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
             for para in paraLines:
                 if PMath.isAlmostParallel(para.first, para.last, line[0], line[1]): 
                     columnLine.append(line) 
-                    dwg.add(dwg.line(start=line[0].toArr(), end=line[1].toArr(), stroke="rgb(200,200,200)", stroke_width=1))
+                    #dwg.add(dwg.line(start=line[0].toArr(), end=line[1].toArr(), stroke="rgb(150,50,50)", stroke_width=10))
 
 
 
     for i in range(len(columnLine)):
         for j in range(i+1, len(columnLine)):
 
-            if PMath.isAlmostParallel(columnLine[i][0], columnLine[i][1], columnLine[j][0], columnLine[j][1]):
+            if PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][0]) < 3 and PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][1]) < 3: 
                 if columnLine[i][0] == columnLine[j][0] or columnLine[i][1] == columnLine[j][1] or columnLine[i][0] == columnLine[j][1] or columnLine[i][1] == columnLine[j][0]:
                     keepColumn[columnLine[i][2]][1] = False
                     keepColumn[columnLine[i][3]][1] = False
                     keepColumn[columnLine[j][2]][1] = False
                     keepColumn[columnLine[j][3]][1] = False
 
-                    dwg.add(dwg.line(start=columnLine[i][0].toArr(), end=columnLine[i][1].toArr(), stroke="rgb(150,150,150)", stroke_width=1))
-                    dwg.add(dwg.line(start=columnLine[j][0].toArr(), end=columnLine[j][1].toArr(), stroke="rgb(150,150,150)", stroke_width=1))
+                    #dwg.add(dwg.line(start=columnLine[i][0].toArr(), end=columnLine[i][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
+                    #dwg.add(dwg.line(start=columnLine[j][0].toArr(), end=columnLine[j][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
 
 
 
@@ -325,15 +311,15 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     for area in areas:
         area.findCurves(keepColumn, walls)
 
-
     for area in areas:
-        area.drawArea(dwg, 5)
+        area.drawArea(dwg, 20)
 
-    # for col in columns:
-    #     dwg.add(dwg.circle(center=col.toArr(), r=2, fill="rgb(150,0,0)"))
 
-    # for col in filteredColumns:
-    #     dwg.add(dwg.circle(center=col.toArr(), r=3, fill="rgb(0,150,0)"))
+    for col in keepColumn:
+        if col[1]:
+            dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
+        else:
+            dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
 
     zoom_script = """
         var svgElement = document.documentElement;
@@ -433,11 +419,11 @@ if __name__ == "__main__":
 
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
-    #extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0177_07_os.png", "../Dataset/03_co/ZB_0177_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0403_07_os.png", "../Dataset/03_co/ZB_0403_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0476_07_os.png", "../Dataset/03_co/ZB_0476_03_co.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0661_07_os.png", "../Dataset/03_co/ZB_0661_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0661_07_os.png", "../Dataset/03_co/ZB_0661_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0673_07_os.png", "../Dataset/03_co/ZB_0673_03_co.png")
 
     #extractPartsAndWalls2("../Dataset/Selected/Test.png", "../Dataset/Selected/ZB_0087_03_co.png")
@@ -447,6 +433,7 @@ if __name__ == "__main__":
 
 
     #nums = [87, 94, 114, 177, 403, 476, 661, 673]
-    #nums = [87]
+    #nums = [403, 661, 673]
+
     #with Pool(8) as p:
-    #   p.map(selectedTest, nums)
+    #    p.map(selectedTest, nums)
