@@ -76,7 +76,7 @@ class Circle:
 
         for i in range(len(between)):
             dist = self.middle.dist(between[i].first)
-            if abs(dist - self.radius) > 2:
+            if abs(dist - self.radius) > 3:
                 return False
         
         return True
@@ -84,7 +84,7 @@ class Circle:
     def isContourInside(self, contour):
         for p in contour:
             d = abs(self.middle.dist(p) - self.radius) 
-            if d > 2:
+            if d > 3:
                 return False
             
         return True

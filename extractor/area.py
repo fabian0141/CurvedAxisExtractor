@@ -81,11 +81,11 @@ class CircleArea:
                     lines.append(lineWall)
 
         # recenter middlepoints
-        #for circle in circles:
-        #    if len(circle.cols) > 2:
-        #        m, r = PMath.getCircle(circle.cols)
-        #        circle.middle = m
-        #        circle.radius = r 
+        for circle in circles:
+            if len(circle.cols) > 2:
+                m, r = PMath.getCircle(circle.cols)
+                circle.middle = m
+                circle.radius = r 
 
         # combine lines
         leng = len(lines)

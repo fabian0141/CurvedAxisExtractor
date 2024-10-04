@@ -33,7 +33,7 @@ int partition(PointRef arr[], int low, int high) {
     int i = low - 1;
 
     for (int j = low; j < high; j++) {
-        if (arr[j].value >= pivot) {
+        if (arr[j].value < pivot) {
             i++;
             swap(&arr[i], &arr[j]);
         }
@@ -123,7 +123,7 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
                     continue;
                 }
                 double d = dist(bigPoint, p);
-                if ((d < 2.5 && bigPoint.val > p.val) || (d < 1 && bigPoint.val == p.val)) {
+                if ((d < 2.5 && bigPoint.val < p.val) || (d < 1 && bigPoint.val == p.val)) {
                         points[bu.points[i]].val = -1;
                         removePoint(buckets, idx, i);
                         (*counter)--;
@@ -227,9 +227,6 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     Bucket *buckets = malloc(buWidth * buHeight * sizeof(Bucket)); 
     printf("Buckets: %d\n", buWidth * buHeight);
 
-    const int TRESHHOLD = 230;
-    const int TRESHHOLD2 = 50;
-
     float max = 0;
 
     for (npy_intp y = 1; y < shape[0]-1; y++) {
@@ -254,6 +251,9 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
         }
     }
 
+    const int TRESHHOLD = 230;
+    const int TRESHHOLD2 = 50;
+
     // caluculate optimal postion of pixels
     for (npy_intp y = 2; y < shape[0]-2; y++) {
         for (npy_intp x = 2; x < shape[1]-2; x++) {
@@ -266,9 +266,9 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 continue;
             }
 
-            if (data[index] < TRESHHOLD2 || data[index2] < TRESHHOLD2 || data[index3] < TRESHHOLD2 || data[index4] < TRESHHOLD2) {
-                continue;
-            }
+            //if (data[index] < TRESHHOLD2 || data[index2] < TRESHHOLD2 || data[index3] < TRESHHOLD2 || data[index4] < TRESHHOLD2) {
+            //    continue;
+            //}
 
             Point p = pixelPos(x, y, 0, data, shape);
             //p = pixelPos(p.x, p.y, p.val, data, shape);

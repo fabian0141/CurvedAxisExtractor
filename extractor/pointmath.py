@@ -106,7 +106,7 @@ class PMath:
         n = abs(a1)*abs(a2)
         l = max(abs(a1), abs(a2)) #TODO: check all distances
 
-        return abs(d/n) > 1 - 0.01/l
+        return abs(d/n) > 1 - 0.1/l
     
     def isAlmostParallelDirs(d1, d2):
 

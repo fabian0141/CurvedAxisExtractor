@@ -203,123 +203,122 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
     points = contour.getContour(img)
     print(len(points))
-    # for point in points[:-10]:
-    #     if point[2] < 0:
-    #         continue
+    for point in points[:-10]:
+        if point[2] < 0:
+            continue
+        col = int(255 - point[2])
+        c = "rgb({},{},{})".format(col, col, col)
+        dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
 
-    #     col = int(255 - point[2])
-    #     c = "rgb({},{},{})".format(col, col, col)
-    #     dwg.add(dwg.circle(center=point[:2] + [0.5, 0.5], r=1, fill=c)) #fill="rgb(0,200,200)"))
-
-    columns = getColumnCenter(columnImg)
-    lineWalls = []
-    areas = []
+    # columns = getColumnCenter(columnImg)
+    # lineWalls = []
+    # areas = []
 
     contours = Contour.convertContour(points)
     for points in contours:
         miniCons = Contour.getContourParts(points, img)
-        for con in miniCons:
+        # for con in miniCons:
             #dwg.add(dwg.circle(center=con.first.toArr(), r=0.5, fill="rgb(250,100,100)"))
-            dwg.add(dwg.line(start=con.first.toArr(), end=con.last.toArr(), stroke="rgb(0,200,0)", stroke_width=0.5))
+        #     dwg.add(dwg.line(start=con.first.toArr(), end=con.last.toArr(), stroke="rgb(0,200,0)", stroke_width=0.5))
         for con in miniCons:
-            dwg.add(dwg.circle(center=con.first.toArr(), r=0.6, fill="rgb(250,100,100)"))
+            dwg.add(dwg.circle(center=con.first.toArr(), r=3, fill="rgb(250,100,100)"))
             #dwg.add(dwg.line(start=con.first.toArr(), end=con.last.toArr(), stroke="rgb(0,200,0)", stroke_width=0.2))
         
-        lines = findCorners(miniCons)
-        for i in range(-1, len(lines)-1):
-            dwg.add(dwg.line(start=lines[i+1].first.toArr(), end=lines[i+1].last.toArr(), stroke="rgb(218,130,0)", stroke_width=0.3))
-        for i in range(-1, len(lines)-1):
-            dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=0.3, fill="rgb(0,154,178)"))
+    #     lines = findCorners(miniCons)
+    #     for i in range(-1, len(lines)-1):
+    #         dwg.add(dwg.line(start=lines[i+1].first.toArr(), end=lines[i+1].last.toArr(), stroke="rgb(218,130,0)", stroke_width=0.3))
+    #     for i in range(-1, len(lines)-1):
+    #         dwg.add(dwg.circle(center=lines[i+1].first.toArr(), r=0.3, fill="rgb(0,154,178)"))
 
-        segments = splitIntoSegments(img, lines)
-        for seg in segments:
-           dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
+    #     segments = splitIntoSegments(img, lines)
+    #     for seg in segments:
+    #        dwg.add(dwg.circle(center=seg.parts[0].first.toArr(), r=1, fill="rgb(150,0,0)"))
 
 
-        circleAreas = []
-        for seg in segments:
-            circles, lin = findCircles(seg)
-            lineWalls.extend(lin)
-            #for c in circles:
-            #    c.drawOutline(dwg, 1)
+    #     circleAreas = []
+    #     for seg in segments:
+    #         circles, lin = findCircles(seg)
+    #         lineWalls.extend(lin)
+    #         #for c in circles:
+    #         #    c.drawOutline(dwg, 1)
 
-            if len(circles) > 0:
-                circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
+    #         if len(circles) > 0:
+    #             circleAreas.extend(CircleArea.getCirclesAreas(img, columns, circles))
         
-        CircleArea.checkNeighboringCircleAreas(circleAreas, img)
-        areas.extend(circleAreas)
+    #     CircleArea.checkNeighboringCircleAreas(circleAreas, img)
+    #     areas.extend(circleAreas)
     
 
 
-    #for lin in lineWalls:
-    #    dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,0,150)", stroke_width=5))
+    # #for lin in lineWalls:
+    # #    dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,0,150)", stroke_width=5))
 
-    paraLines = []
-    walls = []
+    # paraLines = []
+    # walls = []
 
-    for lin in lineWalls:
-        if lin.distinctiveWall or lin.length() > 500:
-            a = True
-            for i in range(len(paraLines)):
-                if PMath.isAlmostParallel(lin.first, lin.last, paraLines[i].first, paraLines[i].last):
-                    a = False
+    # for lin in lineWalls:
+    #     if lin.distinctiveWall or lin.length() > 500:
+    #         a = True
+    #         for i in range(len(paraLines)):
+    #             if PMath.isAlmostParallel(lin.first, lin.last, paraLines[i].first, paraLines[i].last):
+    #                 a = False
             
-            if a:
-                paraLines.append(lin)
-                #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(50,100,250)", stroke_width=20))
+    #         if a:
+    #             paraLines.append(lin)
+    #             #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(50,100,250)", stroke_width=20))
 
 
-        #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,150,150)", stroke_width=1))
-        walls.append(LineWall(LineWall.HARD_WALL, start=lin.first, end=lin.last))
-
-
-
-
-    columnLine = []
-    keepColumn = [[col, True] for col in columns]
-
-    for i in range(len(columns)):
-        for j in range(i+1, len(columns)):
-
-            line = (columns[i], columns[j], i, j)
-            for para in paraLines:
-                if PMath.isAlmostParallel(para.first, para.last, line[0], line[1]): 
-                    columnLine.append(line) 
-                    #dwg.add(dwg.line(start=line[0].toArr(), end=line[1].toArr(), stroke="rgb(150,50,50)", stroke_width=10))
-
-
-
-    for i in range(len(columnLine)):
-        for j in range(i+1, len(columnLine)):
-
-            if PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][0]) < 3 and PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][1]) < 3: 
-                if columnLine[i][0] == columnLine[j][0] or columnLine[i][1] == columnLine[j][1] or columnLine[i][0] == columnLine[j][1] or columnLine[i][1] == columnLine[j][0]:
-                    keepColumn[columnLine[i][2]][1] = False
-                    keepColumn[columnLine[i][3]][1] = False
-                    keepColumn[columnLine[j][2]][1] = False
-                    keepColumn[columnLine[j][3]][1] = False
-
-                    #dwg.add(dwg.line(start=columnLine[i][0].toArr(), end=columnLine[i][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
-                    #dwg.add(dwg.line(start=columnLine[j][0].toArr(), end=columnLine[j][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
+    #     #dwg.add(dwg.line(start=lin.first.toArr(), end=lin.last.toArr(), stroke="rgb(150,150,150)", stroke_width=1))
+    #     walls.append(LineWall(LineWall.HARD_WALL, start=lin.first, end=lin.last))
 
 
 
 
-    for area in areas:
-        walls.extend(area.getWalls())
+    # columnLine = []
+    # keepColumn = [[col, True] for col in columns]
 
-    for area in areas:
-        area.findCurves(keepColumn, walls)
+    # for i in range(len(columns)):
+    #     for j in range(i+1, len(columns)):
 
-    for area in areas:
-        area.drawArea(dwg, 20)
+    #         line = (columns[i], columns[j], i, j)
+    #         for para in paraLines:
+    #             if PMath.isAlmostParallel(para.first, para.last, line[0], line[1]): 
+    #                 columnLine.append(line) 
+    #                 #dwg.add(dwg.line(start=line[0].toArr(), end=line[1].toArr(), stroke="rgb(150,50,50)", stroke_width=10))
 
 
-    for col in keepColumn:
-        if col[1]:
-            dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
-        else:
-            dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
+
+    # for i in range(len(columnLine)):
+    #     for j in range(i+1, len(columnLine)):
+
+    #         if PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][0]) < 3 and PMath.distancePointToLine(columnLine[i][0], columnLine[i][1], columnLine[j][1]) < 3: 
+    #             if columnLine[i][0] == columnLine[j][0] or columnLine[i][1] == columnLine[j][1] or columnLine[i][0] == columnLine[j][1] or columnLine[i][1] == columnLine[j][0]:
+    #                 keepColumn[columnLine[i][2]][1] = False
+    #                 keepColumn[columnLine[i][3]][1] = False
+    #                 keepColumn[columnLine[j][2]][1] = False
+    #                 keepColumn[columnLine[j][3]][1] = False
+
+    #                 #dwg.add(dwg.line(start=columnLine[i][0].toArr(), end=columnLine[i][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
+    #                 #dwg.add(dwg.line(start=columnLine[j][0].toArr(), end=columnLine[j][1].toArr(), stroke="rgb(0,100,150)", stroke_width=10))
+
+
+
+
+    # for area in areas:
+    #     walls.extend(area.getWalls())
+
+    # for area in areas:
+    #     area.findCurves(keepColumn, walls)
+
+    # for area in areas:
+    #     area.drawArea(dwg, 20)
+
+
+    # for col in keepColumn:
+    #     if col[1]:
+    #         dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
+    #     else:
+    #         dwg.add(dwg.circle(center=col[0].toArr(), r=20, fill="rgb(150,0,0)"))
 
     zoom_script = """
         var svgElement = document.documentElement;
@@ -395,6 +394,7 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
 
     # Save the SVG file
     dwg.save()
+    print("Done.")
 
 if __name__ == "__main__":
     
@@ -418,8 +418,8 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
-    #extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0177_07_os.png", "../Dataset/03_co/ZB_0177_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0403_07_os.png", "../Dataset/03_co/ZB_0403_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0476_07_os.png", "../Dataset/03_co/ZB_0476_03_co.png")
