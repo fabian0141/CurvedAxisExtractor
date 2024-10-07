@@ -252,7 +252,6 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
     }
 
     const int TRESHHOLD = 230;
-    const int TRESHHOLD2 = 50;
 
     // caluculate optimal postion of pixels
     for (npy_intp y = 2; y < shape[0]-2; y++) {
@@ -266,13 +265,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 continue;
             }
 
-            //if (data[index] < TRESHHOLD2 || data[index2] < TRESHHOLD2 || data[index3] < TRESHHOLD2 || data[index4] < TRESHHOLD2) {
-            //    continue;
-            //}
-
             Point p = pixelPos(x, y, 0, data, shape);
-            //p = pixelPos(p.x, p.y, p.val, data, shape);
-
             double val = 255-p.val;
 
             int buIdx = (int)p.y / 5 * buWidth + (int)p.x / 5;
@@ -291,7 +284,6 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
 
     printf("Point Count: %d \n", counter);
 
-    // TODO: maybe check for biggest value instead?
     int counter2 = counter;
     for (int i = 0; i < counter2; i++)
     {

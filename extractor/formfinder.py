@@ -182,7 +182,7 @@ def findCircles(seg):
             if circle is None:
                 circles = circles[:-1]
                 i = i+2
-                # lines.extend(seg[start:i+1]) TODO: check indices exactly
+                lines.extend(seg[start:i+1]) #TODO: check indices exactly
 
             elif circle.areBetweenPointsInside(seg[start+1:i+4]) and circle.isContourInside(seg.getContour(start, i+4)):
                 circles[-1] = circle

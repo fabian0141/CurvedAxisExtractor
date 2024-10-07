@@ -104,8 +104,7 @@ class PMath:
 
         d = a1.dot(a2)
         n = abs(a1)*abs(a2)
-        l = max(abs(a1), abs(a2)) #TODO: check all distances
-
+        l = max(abs(a1), abs(a2), p1.dist(q1), p1.dist(q2), p2.dist(q1), p2.dist(q2)) # TODO: Maybe improve?
         return abs(d/n) > 1 - 0.1/l
     
     def isAlmostParallelDirs(d1, d2):
