@@ -3,6 +3,7 @@
         "xutility": "c",
         "type_traits": "c",
         "xtr1common": "c",
-        "list": "c"
+        "list": "c",
+        "contour.h": "c"
     }
 }

@@ -201,6 +201,11 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     absPath = os.path.abspath(imgFile)
     dwg.add(dwg.image(absPath, insert=(0, 0), size=img.shape))
 
+    qt = contour.Contour(0, 100, 0, 100, 4)
+    qt.insert(10, 10)
+    qt.insert(20, 20)
+    qt.insert(30, 30)
+
     points = contour.getContour(img)
     print(len(points))
     for point in points[:-10]:
@@ -214,14 +219,14 @@ def extractPartsAndWalls2(imgFile, columnImg, out="test.svg"):
     # lineWalls = []
     # areas = []
 
-    contours = Contour.convertContour(points)
-    for points in contours:
-        miniCons = Contour.getContourParts(points, img)
+    #contours = Contour.convertContour(points)
+    #for points in contours:
+    #    miniCons = Contour.getContourParts(points, img)
         # for con in miniCons:
             #dwg.add(dwg.circle(center=con.first.toArr(), r=0.5, fill="rgb(250,100,100)"))
         #     dwg.add(dwg.line(start=con.first.toArr(), end=con.last.toArr(), stroke="rgb(0,200,0)", stroke_width=0.5))
-        for con in miniCons:
-            dwg.add(dwg.circle(center=con.first.toArr(), r=3, fill="rgb(250,100,100)"))
+    #    for con in miniCons:
+    #        dwg.add(dwg.circle(center=con.first.toArr(), r=3, fill="rgb(250,100,100)"))
             #dwg.add(dwg.line(start=con.first.toArr(), end=con.last.toArr(), stroke="rgb(0,200,0)", stroke_width=0.2))
         
     #     lines = findCorners(miniCons)
@@ -417,8 +422,8 @@ if __name__ == "__main__":
     #extractPartsAndWalls("../Dataset/Selected/ZB_0661_02_sl.png", "../Dataset/Selected/ZB_0661_03_co.png", "../Dataset/Selected/ZB_0661_07_os.png")
     #extractPartsAndWalls("../Dataset/Selected/ZB_0673_02_sl.png", "../Dataset/Selected/ZB_0673_03_co.png", "../Dataset/Selected/ZB_0673_07_os.png")
 
-    #extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
-    extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
+    extractPartsAndWalls2("../Dataset/07_os/ZB_0087_07_os.png", "../Dataset/03_co/ZB_0087_03_co.png")
+    #extractPartsAndWalls2("../Dataset/07_os/ZB_0094_07_os.png", "../Dataset/03_co/ZB_0094_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0114_07_os.png", "../Dataset/03_co/ZB_0114_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0177_07_os.png", "../Dataset/03_co/ZB_0177_03_co.png")
     #extractPartsAndWalls2("../Dataset/07_os/ZB_0403_07_os.png", "../Dataset/03_co/ZB_0403_03_co.png")

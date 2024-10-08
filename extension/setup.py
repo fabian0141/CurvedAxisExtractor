@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 import numpy
 
-module = Extension('contour', sources=['contour.c'], include_dirs=[numpy.get_include()])
+module = Extension('contour', sources=['init.c', 'quadtree.c', 'contour.c'], include_dirs=[numpy.get_include(), './'])
 
 setup(
     name='contour',

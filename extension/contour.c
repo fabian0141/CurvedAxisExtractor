@@ -1,7 +1,12 @@
-#include <Python.h>
+#include "contour.h"
+
 #include <numpy/arrayobject.h>
 #include <stdlib.h>
 #include <math.h>
+
+
+
+//static PyObject* normalizeContour
 
 typedef struct {
     double x;
@@ -51,10 +56,10 @@ void quickSort(PointRef arr[], int low, int high) {
     }
 }
 
-//python setup.py build && python setup.py install
+// python setup.py build && python setup.py install
 // Function to add two numbers
 // For Mac: export ARCHFLAGS="-arch x86_64"  
-static PyObject* add(PyObject* self, PyObject* args) {
+PyObject* add(PyObject* self, PyObject* args) {
     PyArrayObject *arr1, *arr2, *result;
     if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &arr1, &PyArray_Type, &arr2)) {
         return NULL;
@@ -89,21 +94,21 @@ static PyObject* add(PyObject* self, PyObject* args) {
     return (PyObject*) result;
 }
 
-static double dist(Point p1, Point p2) {
+double dist(Point p1, Point p2) {
     //printf("L: %f %f %f %f\n", p1.x, p1.y, p2.x, p2.y);
     double x = p1.x - p2.x;
     double y = p1.y - p2.y;
     return sqrt(x*x + y*y);
 }
 
-static void removePoint(Bucket *buckets, int buIdx, int pos) {
+void removePoint(Bucket *buckets, int buIdx, int pos) {
     int* startPos = buckets[buIdx].points + pos;
     int size = buckets[buIdx].length - pos - 1;
     memmove(startPos, startPos + 1, size * sizeof(int));
     buckets[buIdx].length--;
 }
 
-static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, int buIdx, int ref, int buWidth, int *counter) {
+void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, int buIdx, int ref, int buWidth, int *counter) {
     for (int y = -1; y < 2; y++) {
         for (int x = -1; x < 2; x++) {
             int idx = buIdx + y * buWidth + x;
@@ -135,7 +140,7 @@ static void checkIfBiggestValue(Bucket *buckets, Point *points, Point bigPoint, 
     }
 }
 
-static int findClosestPoint(Bucket *buckets, Point *points, Point p, int buIdx, int buWidth, int *closestBucket) {
+int findClosestPoint(Bucket *buckets, Point *points, Point p, int buIdx, int buWidth, int *closestBucket) {
     int closestPoint = -1;
     double closestDist = 1000000000;
     //printf("%f %f %f %d \n", points[curIdx].x, points[curIdx].y, points[curIdx].val, curIdx);
@@ -167,7 +172,7 @@ static int findClosestPoint(Bucket *buckets, Point *points, Point p, int buIdx, 
     return closestPoint; 
 }
 
-static Point pixelPos(int x, int y, double val, uint8_t *data, npy_intp *shape) {
+Point pixelPos(int x, int y, double val, uint8_t *data, npy_intp *shape) {
     double sum = 0;
     double px = 0;
     double py = 0;
@@ -202,7 +207,7 @@ static Point pixelPos(int x, int y, double val, uint8_t *data, npy_intp *shape) 
     return (Point){px, py, sum};
 }
 
-static PyObject* getContour(PyObject* self, PyObject* args) {
+PyObject* getContour(PyObject* self, PyObject* args) {
     PyArrayObject *arr1, *result;
     if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr1)) {
         return NULL;
@@ -280,7 +285,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
         }
     }
     
-    quickSort(pointRefs, 0, counter - 1);
+    /*quickSort(pointRefs, 0, counter - 1);
 
     printf("Point Count: %d \n", counter);
 
@@ -350,9 +355,14 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 return (PyObject*) result;
             }
         }
-    }
+    }*/
 
-    /*int i = 0;
+    npy_intp dims[2] = {counter, 3};
+
+    result = (PyArrayObject*) PyArray_SimpleNew(2, dims, NPY_DOUBLE);
+    double *data_result = (double*) PyArray_DATA(result);
+
+    int i = 0;
     for (int y = 1; y < buHeight-1; y++) {
         for (int x = 1; x < buWidth-1; x++) {
             int buIdx = y * buWidth + x;
@@ -369,7 +379,7 @@ static PyObject* getContour(PyObject* self, PyObject* args) {
                 i++;
             }
         }
-    }*/
+    }
 
     free(pointRefs);
     free(points);
@@ -423,28 +433,4 @@ static PyObject* testContour(PyObject* self, PyObject* args) {
         }
     }
     return (PyObject*) result;
-}
-
-// Method definitions
-static PyMethodDef MyMethods[] = {
-    {"add", add, METH_VARARGS, "Add two arrays element-wise"},
-    {"getContour", getContour, METH_VARARGS, "Add two arrays element-wise"},
-    {"testContour", testContour, METH_VARARGS, "Add two arrays element-wise"},
-
-    {NULL, NULL, 0, NULL}
-};
-
-// Module definition
-static struct PyModuleDef contour = {
-    PyModuleDef_HEAD_INIT,
-    "contour", // Name of the module
-    NULL,       // Module documentation (could be a docstring)
-    -1,         // Size of per-interpreter state of the contour
-    MyMethods
-};
-
-// Module initialization function
-PyMODINIT_FUNC PyInit_contour(void) {
-    import_array();
-    return PyModule_Create(&contour);
 }
