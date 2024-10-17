@@ -123,7 +123,7 @@ PyObject *Quadtree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 // Initialize a new Quadtree object
-/*int Quadtree_init(Quadtree *self, PyObject *args, PyObject *kwds) {
+int Quadtree_init(Quadtree *self, PyObject *args, PyObject *kwds) {
     float min_x, max_x, min_y, max_y;
     int capacity;
 
@@ -133,23 +133,6 @@ PyObject *Quadtree_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 
     self->root = QuadtreeNode_new(min_x, max_x, min_y, max_y, capacity);
     return 0;
-}*/
-
-int Quadtree_init(Quadtree *self, PyObject *args, PyObject *kwds) {
-    PyArrayObject *arr1, *result;
-    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr1)) {
-        return NULL;
-    }
-
-    if (PyArray_NDIM(arr1) != 2 || PyArray_TYPE(arr1) != NPY_UINT8) {
-        PyErr_SetString(PyExc_ValueError, "Arrays must be two-dimensional and of type int.");
-        return NULL;
-    }
-
-    npy_intp *shape = PyArray_SHAPE(arr1);
-    int counter = 0; 
-    uint8_t *data = (uint8_t*) PyArray_DATA(arr1);
-    int size = shape[0] * shape[1];
 }
 
 // Method to insert a point

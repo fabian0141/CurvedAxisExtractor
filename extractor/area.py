@@ -113,7 +113,7 @@ class CircleArea:
         #self.drawColumns(dwg, thickness)
         self.circle.drawOutline(dwg, thickness)
 
-    def getCirclesAreas(img, columns, circles, fullCircle = False):
+    def getCirclesAreas(columns, circles, fullCircle = False):
         areas = []
         for circle in circles:
             #cv.circle(img, c.toIntArr(), int(r), (255, 100, 100), 2)
@@ -123,7 +123,7 @@ class CircleArea:
             areas.append(area)
         return areas
 
-    def checkNeighboringCircleAreas(circleAreas, img): #TODO: maybe weird case where triangle flips
+    def checkNeighboringCircleAreas(circleAreas): #TODO: maybe weird case where triangle flips
         circleData = []
 
         if len(circleAreas) == 3:

@@ -40,6 +40,14 @@ class Line:
         self.last = points[-1]
         self.distinctiveWall = False
 
+    def convArr(arr):
+        lines = []
+        for i in range(len(arr)):
+            line = Line([Vec2(arr[i][0:2]), Vec2(arr[i][2:4])])
+            line.distinctiveWall = arr[i][4]
+            lines.append(line)
+        return lines
+
     def __iadd__(self, line):
         self.points.extend(line.points[1:])
         self.last = self.points[-1]

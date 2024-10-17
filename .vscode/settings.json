@@ -4,6 +4,10 @@
         "type_traits": "c",
         "xtr1common": "c",
         "list": "c",
-        "contour.h": "c"
+        "contour.h": "c",
+        "math.h": "c",
+        "stdlib.h": "c",
+        "point.h": "c",
+        "memory.h": "c"
     }
 }

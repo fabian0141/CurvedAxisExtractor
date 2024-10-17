@@ -71,6 +71,13 @@ class Circle:
             return None
 
         return Circle(middlePoint, radius, p1, p2, seg[end-1].last) 
+    
+    def convArr(arr):
+        circles = []
+        for i in range(len(arr)):
+            circles.append(Circle(Vec2(arr[i][6:8]), arr[i][8], Vec2(arr[i][0:2]), Vec2(arr[i][2:4]), Vec2(arr[i][4:6])))
+
+        return circles
 
     def areBetweenPointsInside(self, between):
 
