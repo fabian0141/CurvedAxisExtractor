@@ -96,6 +96,34 @@ class Circle:
             
         return True
 
+    def isOutsideAlligned(self, p):
+        if self.allignedMiddle.dist(self.middle) < 0.1:
+            return False
+
+        a1 = self.end
+        a2 = self.start
+        b = self.middle
+        c = self.allignedMiddle
+
+        a1b = b - a1
+        a2b = b - a2
+        bc = c - b
+        ca1 = a1 - c
+        ca2 = a2 - c
+
+        a1p = p - a1
+        a2p = p - a2
+        bp = p - b
+        cp = p - c
+
+        cr11 = a1b.cross(a1p)
+        cr12 = a2b.cross(a2p)
+        cr2 = bc.cross(bp)
+        cr31 = ca1.cross(cp)
+        cr32 = ca2.cross(cp)
+
+        return (cr11 >= 0 and cr2 >= 0 and cr31 >= 0 and cr12 >= 0 and cr32 >= 0) or (cr11 <= 0 and cr2 <= 0 and cr31 <= 0 and cr12 <= 0 and cr32 <= 0)
+    
     def isInside(self, p):
         dist = p.dist(self.middle)
         if dist > self.radius:
@@ -103,6 +131,9 @@ class Circle:
 
         if self.fullCircle:
             return True
+        
+        if self.isOutsideAlligned(p):
+            return False
 
         ang = PMath.getAxisAngle(self.middle, p)
         if (int(self.startAngle < ang) + int(self.endAngle < ang) + int(self.startAngle < self.endAngle)) % 2 == 0:

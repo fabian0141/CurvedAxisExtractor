@@ -1,6 +1,3 @@
-import cv2 as cv
-import numpy as np
-from extractor.vec import Vec2
 from extractor.pointmath import PMath
 from extractor.linewall import LineWall
 from extractor.circlewall import CircleWall
@@ -41,14 +38,15 @@ class CircleArea:
 
             col = keepColumn[0]
 
-            if col.dist(self.circle.middle) > 300 + self.circle.middle.dist(self.circle.allignedMiddle) / 2 and self.circle.isInside(col): #TODO: consider allignedmiddle
+            minDist = min(300, self.circle.middle.dist(self.circle.allignedMiddle) + 100)
+            if col.dist(self.circle.middle) > minDist and self.circle.isInside(col):
                 dir = self.circle.middle.dir(col)
                 lineWall = LineWall(LineWall.ADDED_WALL, col=col, dir=dir)
 
                 circleWall = CircleWall(LineWall.ADDED_WALL, self.circle.middle, col=col)
 
                 lineWall.checkForIntersections(walls)
-                circleWall.checkForIntersections(walls) #TODO: check angles for no intersection
+                circleWall.checkForIntersections(walls)
 
                 lines.append(lineWall)
                 circles.append(circleWall)
@@ -177,9 +175,9 @@ class CircleArea:
             circleAreas[n1].circle.allignMiddle(val)
             circleAreas[n2].circle.allignMiddle(val)
             circlePairs.pop(0)
-            CircleArea.checkPairs(circleAreas, img, circlePairs, val, n1, n2)
+            CircleArea.checkPairs(circleAreas, circlePairs, val, n1, n2)
 
-    def checkPairs(circleAreas, img, circlePairs, val, n1, n2=None):
+    def checkPairs(circleAreas, circlePairs, val, n1, n2=None):
         
         i = 0
         while i < len(circlePairs):
@@ -189,7 +187,7 @@ class CircleArea:
                 n1 = circlePairs[i][1]
                 circlePairs.pop(i)
                 circleAreas[n1].circle.allignMiddle(val)
-                CircleArea.checkPairs(circleAreas, img, circlePairs, val, n1)
+                CircleArea.checkPairs(circleAreas, circlePairs, val, n1)
                 continue
 
             if circlePairs[i][1] == n1 or circlePairs[i][1] == n2:
@@ -197,14 +195,14 @@ class CircleArea:
                 n1 = circlePairs[i][0]
                 circleAreas[n1].circle.allignMiddle(val)
                 circlePairs.pop(i)
-                CircleArea.checkPairs(circleAreas, img, circlePairs, val, n1)
+                CircleArea.checkPairs(circleAreas, circlePairs, val, n1)
                 continue
 
             i += 1
 
     def getWalls(self):
         if self.circle.fullCircle:
-            return [CircleWall(LineWall.HARD_WALL, self.circle.middle, radius=self.circle.radius, fullCircle=True)]    
+            return [CircleWall(LineWall.HARD_WALL, self.circle.middle, radius=self.circle.radius, fullCircle=True)]
         else:
             return [
                 CircleWall(LineWall.HARD_WALL, self.circle.middle, radius=self.circle.radius, start=self.circle.startAngle, end=self.circle.endAngle),

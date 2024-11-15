@@ -196,10 +196,13 @@ class CircleWall(Wall):
         if self.fullCircle:
             dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
             return
-
-        startPoint = Vec2([np.cos(self.ang + self.start), np.sin(self.ang + self.start)]) * self.radius + self.middle
         
         angleRange = self.end - self.start if self.start < self.end else 2 * np.pi - self.start + self.end
+        if angleRange > CircleWall.FULL_PERIOD:
+            dwg.add(dwg.circle(center=self.middle.toArr(), r=self.radius, stroke=color, stroke_width=thickness, fill="none"))
+            return
+
+        startPoint = Vec2([np.cos(self.ang + self.start), np.sin(self.ang + self.start)]) * self.radius + self.middle
         rangeParts = int(angleRange * self.radius / 20)
         for i in range(rangeParts+1):
             angle = self.ang + self.start + angleRange * i / rangeParts

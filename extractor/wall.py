@@ -1,6 +1,4 @@
-from extractor.circle import Circle
 from extractor.pointmath import PMath
-import numpy as np
 
 class Wall:
     LINE = 0
