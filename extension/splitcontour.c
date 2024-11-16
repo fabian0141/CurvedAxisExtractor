@@ -140,5 +140,5 @@ PyObject* getContourParts(PyObject *self, PyObject *args) {
 }
 
 void initSplitContour() {
-    import_array();
+    _import_array();
 }

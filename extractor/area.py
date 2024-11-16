@@ -83,7 +83,7 @@ class CircleArea:
             if len(circle.cols) > 2:
                 m, r = PMath.getCircle(circle.cols)
                 circle.middle = m
-                circle.radius = r 
+                circle.radius = r
 
         # combine lines
         leng = len(lines)

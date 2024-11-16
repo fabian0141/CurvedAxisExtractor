@@ -101,5 +101,5 @@ PyObject* splitIntoSegments(PyObject *self, PyObject *args) {
 
 
 void initSegments() {
-    import_array();
+    _import_array();
 }

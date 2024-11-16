@@ -71,7 +71,7 @@ void findPrimitives(double *data, int* parts, int partsLength, int firstPart, in
             if (!isSuitable) { // remove circle because not suitable anymore
                 (*circlesLength)--;
                 i += 2;
-                addLines(lines, linesLength, data, parts, start, i, linesLength);
+                addLines(lines, linesLength, data, parts, start, linesLength);
 
             } else if (isCircleValid(&circle, data, parts, start, i+4)) {
                 circles[(*circlesLength)-1] = circle;
@@ -163,5 +163,5 @@ PyObject* findCirclesAndLines(PyObject *self, PyObject *args) {
 }
 
 void initCircles() {
-    import_array();
+    _import_array();
 }

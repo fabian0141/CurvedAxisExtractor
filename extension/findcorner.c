@@ -129,5 +129,5 @@ PyObject* fixCorners(PyObject *self, PyObject *args) {
 
 
 void initFindCorner() {
-    import_array();
+    _import_array();
 }

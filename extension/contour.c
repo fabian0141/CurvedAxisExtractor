@@ -303,5 +303,5 @@ PyObject* getContour(PyObject* self, PyObject* args) {
 }
 
 void initContour() {
-    import_array();
+    _import_array();
 }
