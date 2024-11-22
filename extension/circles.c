@@ -56,7 +56,7 @@ void findPrimitives(double *data, int* parts, int partsLength, int firstPart, in
 
     for (; i < lastPart-3; i++) {
         if (!isSuitable) {
-
+            
             isSuitable = getCircle(data, parts, i, i+4, &circle);
             if (!isSuitable || !isCircleValid(&circle, data, parts, i, i+4)) { // no suitable circle found or not valid
                 addLine(lines, (*linesLength)++, data, parts, i);
@@ -82,9 +82,9 @@ void findPrimitives(double *data, int* parts, int partsLength, int firstPart, in
             }
         }
     }
-
-    if (circlesLength == 0) {
-        if (linesLength == 1 && lineLength(data, parts, 0) > 100) {
+    
+    if (*circlesLength == 0) {
+        if (firstPart == lastPart && lineLength(data, parts, firstPart) > 100) {
             lines[0].distincitveWall = 1;
         }
         return;

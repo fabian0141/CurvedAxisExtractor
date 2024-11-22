@@ -21,6 +21,16 @@
             "console": "integratedTerminal",
             "subProcess": true,
             "env": {"PYDEVD_USE_CYTHON": "0"}
+        },
+        {
+            "name": "Run Main",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "subProcess": true,
+            "env": {"PYDEVD_USE_CYTHON": "0"},
+            "preLaunchTask": "Compile C Extension"
         }
 
     ]
