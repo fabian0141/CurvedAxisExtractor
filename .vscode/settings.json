@@ -8,7 +8,11 @@
         "math.h": "c",
         "stdlib.h": "c",
         "point.h": "c",
-        "memory.h": "c"
+        "memory.h": "c",
+        "usenumpy.h": "c",
+        "angle.h": "c",
+        "circles.h": "c",
+        "splitcontour.h": "c"
     },
     "pylint.args": [
         "--generated-members=cv2.*",

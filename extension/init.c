@@ -3,6 +3,10 @@
 #include "findcorner.h"
 #include "segment.h"
 #include "circles.h"
+#include "circle2/angle.h"
+
+#define INIT_NUMPY_ARRAY_CPP
+#include "usenumpy.h"
 
 static PyMethodDef MyMethods[] = {
     {"getContour", getContour, METH_VARARGS, "Get all contours from an image."},
@@ -10,6 +14,9 @@ static PyMethodDef MyMethods[] = {
     {"fixCorners", fixCorners, METH_VARARGS, "Fix corners to accurate position."},
     {"splitIntoSegments", splitIntoSegments, METH_VARARGS, "Split contour into segments."},
     {"findCirclesAndLines", findCirclesAndLines, METH_VARARGS, "Split contour into segments."},
+    {"getTangentAngles", getTangentAngles, METH_VARARGS, "Get angle of tangent for points."},
+    {"smoothValues", smoothValues, METH_VARARGS, "Get smoothed values."},
+    {"getSlopesFromAngs", getSlopesFromAngs, METH_VARARGS, "Get slopes from angles."},
 
     {NULL, NULL, 0, NULL}
 };
@@ -27,14 +34,6 @@ static struct PyModuleDef contour = {
 PyMODINIT_FUNC PyInit_contour(void) {
 
     PyObject* m;
-    
-
-    //import_array();
-    initContour();
-    initSplitContour();
-    initFindCorner();
-    initSegments();
-    initCircles();
 
     if (PyErr_Occurred()) {
         printf("Shit");
@@ -43,6 +42,8 @@ PyMODINIT_FUNC PyInit_contour(void) {
     m = PyModule_Create(&contour);
     if (m == NULL)
         return NULL;
+
+    import_array();
 
     //if (PyType_Ready(&quadtree) < 0)
     //   return NULL;

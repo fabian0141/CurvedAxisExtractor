@@ -1,5 +1,5 @@
 #include "circles.h"
-#include <numpy/arrayobject.h>
+#include "usenumpy.h"
 
 #include "line.h"
 #include "circle.h"
@@ -56,8 +56,8 @@ void findPrimitives(double *data, int* parts, int partsLength, int firstPart, in
 
     for (; i < lastPart-3; i++) {
         if (!isSuitable) {
-            
             isSuitable = getCircle(data, parts, i, i+4, &circle);
+
             if (!isSuitable || !isCircleValid(&circle, data, parts, i, i+4)) { // no suitable circle found or not valid
                 addLine(lines, (*linesLength)++, data, parts, i);
                 isSuitable = 0;
@@ -66,6 +66,7 @@ void findPrimitives(double *data, int* parts, int partsLength, int firstPart, in
                 circles[(*circlesLength)++] = circle;
                 start = i;
             }
+
         } else {
             isSuitable = getCircle(data, parts, start, i+4, &circle);
             if (!isSuitable) { // remove circle because not suitable anymore
@@ -96,6 +97,7 @@ PyObject* primitivesToPyArray(Circle* circles, int circlesLength, LineSegment* l
     
     npy_intp dims[] = {circlesLength, 9};
     PyObject* pyCircles = PyArray_SimpleNew(2, dims, NPY_FLOAT64);
+
     double* data = (double*)PyArray_DATA((PyArrayObject*)pyCircles);
 
     int idx = 0;
@@ -111,8 +113,11 @@ PyObject* primitivesToPyArray(Circle* circles, int circlesLength, LineSegment* l
         data[idx++] = circles[i].radius;
     }
 
+
+
     dims[0] = linesLength;
     dims[1] = 5;
+
     PyObject* pyLines = PyArray_SimpleNew(2, dims, NPY_FLOAT64);
     data = (double*)PyArray_DATA((PyArrayObject*)pyLines);
 
@@ -124,11 +129,12 @@ PyObject* primitivesToPyArray(Circle* circles, int circlesLength, LineSegment* l
         data[idx++] = lines[i].p2.y;
         data[idx++] = lines[i].distincitveWall;
     }
-    
+
     free(circles);
     free(lines);
     return PyTuple_Pack(2, pyCircles, pyLines);
 }
+
 
 PyObject* findCirclesAndLines(PyObject *self, PyObject *args) {
     PyArrayObject *arr1 = NULL;
@@ -160,8 +166,4 @@ PyObject* findCirclesAndLines(PyObject *self, PyObject *args) {
 
     findPrimitives(data, parts, partsLength, firstPart, lastPart, circles, &circlesLength, lines, &linesLength);
     return primitivesToPyArray(circles, circlesLength, lines, linesLength);
-}
-
-void initCircles() {
-    _import_array();
 }

@@ -1,5 +1,5 @@
 #include "splitcontour.h"
-#include <numpy/arrayobject.h>
+#include "usenumpy.h"
 
 #include "line.h"
 
@@ -137,8 +137,4 @@ PyObject* getContourParts(PyObject *self, PyObject *args) {
     } while (part != NULL);
 
     return result;
-}
-
-void initSplitContour() {
-    _import_array();
 }

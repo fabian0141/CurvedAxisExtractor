@@ -1,5 +1,6 @@
 #include "segment.h"
-#include <numpy/arrayobject.h>
+#include "usenumpy.h"
+
 
 #include "line.h"
 
@@ -97,9 +98,4 @@ PyObject* splitIntoSegments(PyObject *self, PyObject *args) {
     int* segments = malloc(partsLength * 2 * sizeof(int));
     int segmentsLength = split(&segments, data, parts, partsLength*3);
     return toPyArray(segments, segmentsLength);
-}
-
-
-void initSegments() {
-    _import_array();
 }

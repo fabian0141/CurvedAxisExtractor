@@ -24,6 +24,7 @@ double pDist3(double* data, int idx, Point p);
 
 double pDot(Point p1, Point p2);
 double pCross(Point p1, Point p2);
+Point pDir(double* data, int idx1, int idx2);
 Point pPerp(Point p);
 Point pMiddle(double* data, int idx1, int idx2);
 

@@ -1,5 +1,6 @@
 #include "findcorner.h"
-#include <numpy/arrayobject.h>
+#include "usenumpy.h"
+
 
 #include "line.h"
 #include "point.h"
@@ -125,9 +126,4 @@ PyObject* fixCorners(PyObject *self, PyObject *args) {
     Line* root = partsToLines(parts, partLength);    
     findCorners(data, dataSize, &root, &partLength);    
     return updateParts(root, partLength);
-}
-
-
-void initFindCorner() {
-    _import_array();
 }

@@ -26,8 +26,8 @@ Point linesIntersection(double* data, Line* l1, Line* l2);
 double lineAngle(double* data, int idx1, int idx2, int idx3);
 double lineLength(double* data, int* parts, int idx);
 
-void addLine(LineSegment** lines, int lineIdx, double* data, int* parts, int partIdx);
-void addLines(LineSegment** lines, int* linesLength, double* data, int* parts, int start, int end);
+void addLine(LineSegment* lines, int lineIdx, double* data, int* parts, int partIdx);
+void addLines(LineSegment* lines, int* linesLength, double* data, int* parts, int start, int end);
 
 void updateData(double* data, int idx, Point p);
 void insertLine(Line* line);

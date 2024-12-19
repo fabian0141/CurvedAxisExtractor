@@ -59,6 +59,13 @@ double pCross(Point p1, Point p2) {
     return  p1.x * p2.y - p1.y * p2.x;
 }
 
+Point pDir(double* data, int idx1, int idx2) {
+    double x = data[idx2] - data[idx1];
+    double y = data[idx2+1] - data[idx1+1];
+    double dist = sqrt(x*x + y*y);
+    return (Point){x/dist, y/dist}; 
+}
+
 Point pPerp(Point p) {
     return (Point){-p.y, p.x};
 }

@@ -1,6 +1,6 @@
 #include "contour.h"
+#include "usenumpy.h"
 
-#include <numpy/arrayobject.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -192,7 +192,6 @@ PointNode* findClosestPoint(Bucket *buckets, PointNode *node, int buWidth) {
                 }
 
                 double d = pointDist(node, bu->points[i]);
-
                 if (d < closestDist) {
                     closestDist = d;
                     closestPoint = bu->points[i];
@@ -300,8 +299,4 @@ PyObject* getContour(PyObject* self, PyObject* args) {
     return getAllContours(&pList, buckets, buWidth);
 
    //return returnTestPoints(buSize, buckets, &pList);
-}
-
-void initContour() {
-    _import_array();
 }

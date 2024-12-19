@@ -72,6 +72,41 @@ class Circle:
 
         return Circle(middlePoint, radius, p1, p2, seg[end-1].last) 
     
+    def getCircle2(seg, start, end):
+
+        p1 = Vec2(seg[start][:2])
+        p2 = Vec2(seg[(end + start) // 2][:2])
+        p3 = Vec2(seg[end][:2])
+
+        pointDist1 = p1.dist(p2)
+        pointDist2 = p1.dist(p3)
+        m = 1
+
+        if pointDist1 > pointDist2 * 1.5:
+            m = 1.5
+
+        p2 = Vec2(seg[int(start + (end-start) / (2*m))][:2])
+        p3 = Vec2(seg[int((start-1) + (end-start) / m)][:2])
+        
+        a = [[2*p1.x, 2*p1.y, 1], \
+            [2*p2.x, 2*p2.y, 1], \
+            [2*p3.x, 2*p3.y, 1]]
+        
+        b = [-p1.x**2 - p1.y**2, \
+            -p2.x**2 - p2.y**2, \
+            -p3.x**2 - p3.y**2]
+
+        if np.linalg.det(a) == 0:
+            return None
+
+        x = np.linalg.solve(a, b)
+        middlePoint = Vec2([-x[0], -x[1]])
+        radius = np.sqrt(np.power(middlePoint.x, 2) + np.power(middlePoint.y, 2) - x[2])
+        if radius < 300 or radius > 3000:
+            return None
+
+        return Circle(middlePoint, radius, p1, p2, p3)
+
     def convArr(arr):
         circles = []
         for i in range(len(arr)):

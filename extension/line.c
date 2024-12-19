@@ -65,14 +65,14 @@ double lineLength(double* data, int* parts, int idx) {
     return sqrt(x*x + y*y);
 }
 
-void addLine(LineSegment** lines, int lineIdx, double* data, int* parts, int partIdx) {
+void addLine(LineSegment* lines, int lineIdx, double* data, int* parts, int partIdx) {
     partIdx *= 3;
-    lines[lineIdx]->p1 = toPoint(data, parts[partIdx]*3);
-    lines[lineIdx]->p2 = toPoint(data, parts[partIdx + 1]*3);
-    lines[lineIdx]->distincitveWall = 0;
+    lines[lineIdx].p1 = toPoint(data, parts[partIdx]*3);
+    lines[lineIdx].p2 = toPoint(data, parts[partIdx + 1]*3);
+    lines[lineIdx].distincitveWall = 0;
 }
 
-void addLines(LineSegment** lines, int* linesLength, double* data, int* parts, int start, int end) {
+void addLines(LineSegment* lines, int* linesLength, double* data, int* parts, int start, int end) {
     for (int  i = start; i <= end; i++) {
         addLine(lines, (*linesLength)++, data, parts, i);
     }

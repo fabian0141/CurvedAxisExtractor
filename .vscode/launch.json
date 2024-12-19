@@ -28,10 +28,40 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
+            "justMyCode": false,
             "subProcess": true,
             "env": {"PYDEVD_USE_CYTHON": "0"},
             "preLaunchTask": "Compile C Extension"
-        }
+        },
+        {
+            "name": "C/C++: Attach",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/path/to/python",
+            "processId": "${command:pickProcess}",
+            "MIMode": "gdb", 
+            "miDebuggerPath": "/usr/bin/gdb" 
+        },
+        {
+            "name": "Python C++ Debug",
+            "type": "pythoncpp",
+            "request": "launch",
+            //"pythonConfig": "default",
+            "pythonLaunchName": "Run Main",
+            //"program": "main.py",
+            "cppConfig": "default (win) Attach",
+          }
 
+
+
+    ],
+    "compounds": [
+        {
+            "name": "Python and C Debugging",
+            "configurations": [
+                "Run Main",
+                "C/C++: Attach"
+            ]
+        }
     ]
 }
